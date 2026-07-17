@@ -183,6 +183,32 @@
   .login-modal input:focus { border-color: var(--primary); }
   .login-error { font-size: 13px; color: #e06060; display: none; }
 
+  /* Full-screen login page */
+  .login-page {
+    display: none; width: 100vw; height: 100vh;
+    background: linear-gradient(135deg, #1A1A2E 0%, #2D2F4E 100%);
+    align-items: center; justify-content: center; flex-direction: column;
+  }
+  .login-page.active { display: flex; }
+  .login-card {
+    background: #FFFFFF; border-radius: 16px; padding: 48px 40px;
+    width: 400px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    text-align: center;
+  }
+  .login-card .login-logo { font-size: 22px; font-weight: 700; color: #1A1A2E; margin-bottom: 4px; }
+  .login-card .login-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 32px; }
+  .login-card input {
+    width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 15px; outline: none; margin-bottom: 12px; transition: border-color 0.2s;
+  }
+  .login-card input:focus { border-color: var(--primary); }
+  .login-card .login-err { font-size: 13px; color: #e06060; display: none; margin-bottom: 12px; }
+  .login-card .btn { width: 100%; justify-content: center; padding: 12px; font-size: 15px; }
+
+  /* App container */
+  .app-container { display: none; width: 100%; height: 100%; }
+  .app-container.active { display: flex; }
+
   /* Placeholder */
   .placeholder {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -215,6 +241,21 @@
 </style>
 </head>
 <body>
+
+<!-- ===== Full-screen Login Page ===== -->
+<div class="login-page active" id="login-page">
+  <div class="login-card">
+    <div class="login-logo">陕西前星科技</div>
+    <div class="login-sub">市场活动中心</div>
+    <input type="text" id="login-name" placeholder="请输入姓名" onkeydown="if(event.key==='Enter')document.getElementById('login-pwd-input').focus()">
+    <input type="password" id="login-pwd-input" placeholder="请输入密码" onkeydown="if(event.key==='Enter')doLogin()">
+    <p class="login-err" id="login-page-error">姓名或密码错误，请重试</p>
+    <button class="btn btn-primary" onclick="doLogin()">登 录</button>
+  </div>
+</div>
+
+<!-- ===== App ===== -->
+<div class="app-container" id="app-container">
 
 <button class="mobile-toggle" onclick="toggleSidebar()">&#9776;</button>
 
@@ -285,6 +326,8 @@
 
 </main>
 
+</div><!-- /app-container -->
+
 <!-- Activity Detail Modal -->
 <div class="modal-overlay" id="activity-modal">
   <div class="modal">
@@ -293,22 +336,6 @@
       <button class="modal-close" onclick="closeModal()">&times;</button>
     </div>
     <div class="modal-body" id="modal-body"></div>
-  </div>
-</div>
-
-<!-- Login Modal -->
-<div class="modal-overlay" id="login-modal">
-  <div class="modal login-modal">
-    <div class="modal-header">
-      <h2>登录</h2>
-      <button class="modal-close" onclick="closeLoginModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <input type="text" id="login-name" placeholder="请输入姓名" onkeydown="if(event.key==='Enter')document.getElementById('login-pwd').focus()">
-      <input type="password" id="login-pwd" placeholder="请输入密码" onkeydown="if(event.key==='Enter')doLogin()">
-      <p class="login-error" id="login-error">姓名或密码错误，请重试</p>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">登录</button>
-    </div>
   </div>
 </div>
 
@@ -388,53 +415,37 @@ function isLoggedIn() {
 }
 
 // ===== Login =====
-function openLoginModal() {
-  document.getElementById('login-modal').classList.add('open');
-  document.getElementById('login-name').value = '';
-  document.getElementById('login-pwd').value = '';
-  document.getElementById('login-error').style.display = 'none';
-  setTimeout(function() { document.getElementById('login-name').focus(); }, 100);
-}
-
-function closeLoginModal() {
-  document.getElementById('login-modal').classList.remove('open');
-}
-
 function doLogin() {
   var name = document.getElementById('login-name').value.trim();
-  var pwd = document.getElementById('login-pwd').value;
+  var pwd = document.getElementById('login-pwd-input').value;
   var user = USERS.find(function(u) { return u.name === name && u.pwd === pwd; });
   if (user) {
     setCurrentUser(user);
-    closeLoginModal();
+    document.getElementById('login-page').classList.remove('active');
+    document.getElementById('app-container').classList.add('active');
+    document.getElementById('login-page-error').style.display = 'none';
+    document.getElementById('login-name').value = '';
+    document.getElementById('login-pwd-input').value = '';
     renderLoginUI();
     renderSchedule();
   } else {
-    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('login-page-error').style.display = 'block';
   }
 }
 
 function doLogout() {
   setCurrentUser(null);
+  document.getElementById('login-page').classList.add('active');
+  document.getElementById('app-container').classList.remove('active');
   renderLoginUI();
-  renderSchedule();
 }
 
 // ===== Login UI =====
-function renderLoginUI(init) {
-  var sidebar = document.getElementById('sidebar');
-  var mobileToggle = document.querySelector('.mobile-toggle');
+function renderLoginUI() {
   var el = document.getElementById('sidebar-login');
   var u = getCurrentUser();
   if (u) {
-    sidebar.style.display = 'flex';
-    if (mobileToggle) mobileToggle.style.display = '';
     el.innerHTML = '<div class="user-info"><span class="role">'+escHtml(u.name)+'</span> · '+escHtml(u.role)+'<br><span class="logout-link" onclick="doLogout()">退出登录</span></div>';
-  } else {
-    sidebar.style.display = 'none';
-    if (mobileToggle) mobileToggle.style.display = 'none';
-    if (!init) openLoginModal();
-    el.innerHTML = '&nbsp;';
   }
 }
 
@@ -477,17 +488,6 @@ var sectionDefs = [
 function renderSchedule() {
   var container = document.getElementById('page-schedule');
   var html = '';
-
-  if (!isLoggedIn()) {
-    html += '<div class="placeholder" style="padding-top:120px;">';
-    html += '<div class="icon-large">&#128274;</div>';
-    html += '<h2>请先登录</h2>';
-    html += '<p>使用您的姓名和密码登录后查看活动排期</p>';
-    html += '<button class="btn btn-primary" style="margin-top:16px;" onclick="openLoginModal()">登录系统</button>';
-    html += '</div>';
-    container.innerHTML = html;
-    return;
-  }
 
   // Count stats
   var ongoing = 0, upcoming = 0, done = 0;
@@ -783,13 +783,17 @@ function closeSidebar() {
 document.getElementById('activity-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
-document.getElementById('login-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeLoginModal();
-});
 
 // ===== Init =====
-renderLoginUI(true);
-renderSchedule();
+(function init() {
+  var u = getCurrentUser();
+  if (u) {
+    document.getElementById('login-page').classList.remove('active');
+    document.getElementById('app-container').classList.add('active');
+    renderLoginUI();
+    renderSchedule();
+  }
+})();
 </script>
 
 </body>
