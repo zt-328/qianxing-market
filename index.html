@@ -300,91 +300,121 @@
 <div class="modal-overlay" id="login-modal">
   <div class="modal login-modal">
     <div class="modal-header">
-      <h2>管理员登录</h2>
+      <h2>登录</h2>
       <button class="modal-close" onclick="closeLoginModal()">&times;</button>
     </div>
     <div class="modal-body">
-      <input type="password" id="login-pwd" placeholder="请输入管理员密码" onkeydown="if(event.key==='Enter')doLogin()">
-      <p class="login-error" id="login-error">密码错误，请重试</p>
+      <input type="text" id="login-name" placeholder="请输入姓名" onkeydown="if(event.key==='Enter')document.getElementById('login-pwd').focus()">
+      <input type="password" id="login-pwd" placeholder="请输入密码" onkeydown="if(event.key==='Enter')doLogin()">
+      <p class="login-error" id="login-error">姓名或密码错误，请重试</p>
       <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">登录</button>
     </div>
   </div>
 </div>
 
 <script>
-// ===== Config =====
-const ADMIN_PASSWORD = 'qianxing2026';
-
-const CATEGORIES = {
-  '秒杀节奏': { bg: '#EAF0F8', color: '#4877B5' },
-  '育商活动': { bg: '#FFF5E8', color: '#E8A838' },
-  '营销活动': { bg: '#EDF2E8', color: '#5B9E6F' },
-  '内部会议': { bg: '#FFFDE8', color: '#B8A020' }
-};
-
-const CAT_KEYS = Object.keys(CATEGORIES);
-
-const STATUS_TAGS = {
-  ongoing:  { cls: 'tag-active',   label: '进行中' },
-  upcoming: { cls: 'tag-upcoming', label: '即将开始' },
-  done:     { cls: 'tag-done',     label: '已完成' }
-};
-
-// ===== Activity Data =====
-const DEFAULT_ACTIVITIES = [
-  // 7月 - 本周进行中
-  { id: 1,  title: 'AWB经营私董会',               cat: '营销活动', date: '7月14日',          status: 'ongoing',  section: 'jul-w1', contact: '赵向瑜 / 董越' },
-  { id: 2,  title: '跨境三单俱乐部',               cat: '育商活动', date: '7月14日 - 17日',   status: 'ongoing',  section: 'jul-w1' },
-  { id: 3,  title: '新签沙龙',                     cat: '营销活动', date: '7月15日',          status: 'ongoing',  section: 'jul-w1', contact: '赵向瑜 / 董越' },
-  { id: 4,  title: 'Accio Work — 业务增长SOP',     cat: '育商活动', date: '7月16日 - 17日',   status: 'ongoing',  section: 'jul-w1', contact: '赵向瑜 / 董越' },
-  { id: 5,  title: '区域小百大',                   cat: '内部会议', date: '7月17日',          status: 'ongoing',  section: 'jul-w1' },
-  // 7月 - 下周开始
-  { id: 6,  title: '团战102杭州集结 & 达人赛选手集结', cat: '育商活动', date: '7月20日 - 21日', status: 'upcoming', section: 'jul-w2' },
-  { id: 7,  title: 'AWB私董会',                    cat: '营销活动', date: '7月23日 - 24日',   status: 'upcoming', section: 'jul-w2' },
-  { id: 8,  title: '区域峰会',                     cat: '营销活动', date: '7月28日',          status: 'upcoming', section: 'jul-w2' },
-  { id: 9,  title: '公司游学（重庆）',             cat: '营销活动', date: '7月30日 - 31日',   status: 'upcoming', section: 'jul-w2' },
-  { id: 10, title: '询盘诊断会 | 达人赛区域决赛',   cat: '育商活动', date: '7月28日 - 31日',   status: 'upcoming', section: 'jul-w2' },
-  // 7月 - 已完成
-  { id: 11, title: '新签沙龙',                     cat: '营销活动', date: '7月9日',           status: 'done',     section: 'jul-w3', contact: '申赵赵 / 董越' },
-  { id: 12, title: 'Accio Work 成交营',            cat: '育商活动', date: '7月9日',           status: 'done',     section: 'jul-w3', contact: '申赵赵 / 董越' },
-  { id: 13, title: 'Accio Work 私教课',            cat: '育商活动', date: '7月10日',          status: 'done',     section: 'jul-w3', contact: '申赵赵 / 董越' },
-  // 8月上旬
-  { id: 14, title: '启动会',                       cat: '内部会议', date: '8月2日 - 3日',     status: 'upcoming', section: 'aug-w1' },
-  { id: 15, title: '新签沙龙',                     cat: '营销活动', date: '8月4日',           status: 'upcoming', section: 'aug-w1' },
-  { id: 16, title: 'Accio Work 成交营 · 备战9月采购节', cat: '育商活动', date: '8月6日 - 7日', status: 'upcoming', section: 'aug-w1' },
-  // 8月中旬
-  { id: 17, title: '橙功营',                       cat: '育商活动', date: '8月9日 - 11日',    status: 'upcoming', section: 'aug-w2' },
-  { id: 18, title: 'Accio Work 跨境三单俱乐部',     cat: '育商活动', date: '8月11日 - 14日',   status: 'upcoming', section: 'aug-w2' },
-  { id: 19, title: '公司峰会',                     cat: '营销活动', date: '8月13日 - 14日',   status: 'upcoming', section: 'aug-w2' },
-  { id: 20, title: 'Accio Work 成交营',            cat: '育商活动', date: '8月14日',          status: 'upcoming', section: 'aug-w2' },
-  // 8月下旬
-  { id: 21, title: '采购节军政启动会（上午）& 全员启动会（下午）', cat: '育商活动', date: '8月18日', status: 'upcoming', section: 'aug-w3' },
-  { id: 22, title: '管理论坛',                     cat: '内部会议', date: '8月18日',          status: 'upcoming', section: 'aug-w3' },
-  { id: 23, title: '新签沙龙',                     cat: '营销活动', date: '8月19日',          status: 'upcoming', section: 'aug-w3' },
-  { id: 24, title: 'Accio Work 成交营 · 业务增长SOP', cat: '育商活动', date: '8月20日',        status: 'upcoming', section: 'aug-w3' },
-  { id: 25, title: '创业大赛实力赛道决赛 + 杭州商家大会', cat: '营销活动', date: '8月20日 - 22日', status: 'upcoming', section: 'aug-w3' },
-  { id: 26, title: '新签沙龙',                     cat: '营销活动', date: '8月27日',          status: 'upcoming', section: 'aug-w3' },
-  { id: 27, title: '百团 1v1 陪跑对焦',            cat: '育商活动', date: '8月27日 - 28日',   status: 'upcoming', section: 'aug-w3' },
-  // 9月上旬
-  { id: 28, title: '达人赛创业赛道总决赛 + 游学（成都）', cat: '营销活动', date: '9月4日 - 5日',  status: 'upcoming', section: 'sep-w1' },
-  { id: 29, title: '公司峰会',                     cat: '营销活动', date: '9月9日',           status: 'upcoming', section: 'sep-w1' },
-  { id: 30, title: '四五星大区招商',               cat: '营销活动', date: '9月10日 - 12日',    status: 'upcoming', section: 'sep-w1' },
-  // 9月中旬
-  { id: 31, title: '成都游学（区域）',             cat: '营销活动', date: '9月13日 - 15日',    status: 'upcoming', section: 'sep-w2' },
-  { id: 32, title: '采购节中期复盘启动',           cat: '育商活动', date: '9月14日',          status: 'upcoming', section: 'sep-w2' },
-  { id: 33, title: 'Accio Work 成交营',            cat: '育商活动', date: '9月15日',          status: 'upcoming', section: 'sep-w2' },
-  { id: 34, title: '新签沙龙',                     cat: '营销活动', date: '9月17日 - 18日',    status: 'upcoming', section: 'sep-w2' },
-  { id: 35, title: '核心商家季度交流会',           cat: '育商活动', date: '9月17日 - 18日',    status: 'upcoming', section: 'sep-w2' },
-  // 9月下旬
-  { id: 36, title: '本地游学',                     cat: '营销活动', date: '9月23日',          status: 'upcoming', section: 'sep-w3' }
+// ===== User Data =====
+var USERS = [
+  { name: '王帅飞', pwd: '123456', role: '客户经理' },
+  { name: '寇智星', pwd: '123456', role: '客户经理' },
+  { name: '王庚毅', pwd: '123456', role: '客户经理' },
+  { name: '田耀利', pwd: '123456', role: '客户经理' },
+  { name: '吴贵琴', pwd: '123456', role: '客户经理' },
+  { name: '李凌龙', pwd: '123456', role: '客户经理' },
+  { name: '张伟',   pwd: '123456', role: '客户经理' },
+  { name: '王雪',   pwd: '123456', role: '客户经理' },
+  { name: '路路明', pwd: '123456', role: '客户经理' },
+  { name: '王浩楠', pwd: '123456', role: '客户经理' },
+  { name: '何俣岐', pwd: '123456', role: '客户经理' },
+  { name: '来星驰', pwd: '123456', role: '客户经理' },
+  { name: '李江樑', pwd: '123456', role: '客户经理' },
+  { name: '段豪歌', pwd: '123456', role: '客户经理' },
+  { name: '洪宇超', pwd: '123456', role: '客户经理' },
+  { name: '缑李琳', pwd: '123456', role: '客户经理' },
+  { name: '王维治', pwd: '123456', role: '客户经理' },
+  { name: '安阳',   pwd: '123456', role: '客户经理' },
+  { name: '李悦',   pwd: '123456', role: '客户经理' },
+  { name: '程梦',   pwd: '123456', role: '客户经理' },
+  { name: '孟凡喆', pwd: '123456', role: '客户经理' },
+  { name: '颉冠斌', pwd: '123456', role: '客户经理' },
+  { name: '田晨泽', pwd: '123456', role: '客户经理' },
+  { name: '王伟霞', pwd: '123456', role: '客户经理' },
+  { name: '曹子亮', pwd: '123456', role: '客户经理' },
+  { name: '杨鑫',   pwd: '123456', role: '客户经理' },
+  { name: '罗海荣', pwd: '123456', role: '客户经理' },
+  { name: '张静',   pwd: '123456', role: '管理员' },
+  { name: '翟恬',   pwd: '123456', role: '管理员' },
+  { name: '杨蒙',   pwd: '123456', role: '销售主管' },
+  { name: '马旭伟', pwd: '123456', role: '销售主管' },
+  { name: '董越',   pwd: '123456', role: '销售主管' },
+  { name: '雷明升', pwd: '123456', role: '销售主管' },
+  { name: '姬媛',   pwd: '123456', role: '运营主管' }
 ];
 
-// Load from localStorage or use defaults
-function loadActivities() {
-  var stored = localStorage.getItem('qx_activities');
-  if (stored) {
-    try { return JSON.parse(stored); } catch(e) {}
+// ===== Auth =====
+function getCurrentUser() {
+  var u = sessionStorage.getItem('qx_user');
+  return u ? JSON.parse(u) : null;
+}
+
+function setCurrentUser(user) {
+  if (user) sessionStorage.setItem('qx_user', JSON.stringify(user));
+  else sessionStorage.removeItem('qx_user');
+}
+
+function isAdmin() {
+  var u = getCurrentUser();
+  return u && u.role === '管理员';
+}
+
+function isLoggedIn() {
+  return getCurrentUser() !== null;
+}
+
+// ===== Login =====
+function openLoginModal() {
+  document.getElementById('login-modal').classList.add('open');
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-pwd').value = '';
+  document.getElementById('login-error').style.display = 'none';
+  setTimeout(function() { document.getElementById('login-name').focus(); }, 100);
+}
+
+function closeLoginModal() {
+  document.getElementById('login-modal').classList.remove('open');
+}
+
+function doLogin() {
+  var name = document.getElementById('login-name').value.trim();
+  var pwd = document.getElementById('login-pwd').value;
+  var user = USERS.find(function(u) { return u.name === name && u.pwd === pwd; });
+  if (user) {
+    setCurrentUser(user);
+    closeLoginModal();
+    renderLoginUI();
+    renderSchedule();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
   }
+}
+
+function doLogout() {
+  setCurrentUser(null);
+  renderLoginUI();
+  renderSchedule();
+}
+
+// ===== Login UI =====
+function renderLoginUI() {
+  var el = document.getElementById('sidebar-login');
+  var u = getCurrentUser();
+  if (u) {
+    var isAdminUser = u.role === '管理员';
+    el.innerHTML = '<div class="user-info"><span class="role">'+escHtml(u.name)+'</span> · '+escHtml(u.role)+(isAdminUser?' · 管理':'')+'<br><span class="logout-link" onclick="doLogout()">退出登录</span></div>';
+  } else {
+    el.innerHTML = '<button class="login-btn" onclick="openLoginModal()">&#128274; 登录系统</button>';
+  }
+}
   var data = DEFAULT_ACTIVITIES.map(function(a) {
     return Object.assign({ invitation: '', desc: '' }, a);
   });
@@ -429,6 +459,17 @@ function renderSchedule() {
   var container = document.getElementById('page-schedule');
   var html = '';
 
+  if (!isLoggedIn()) {
+    html += '<div class="placeholder" style="padding-top:120px;">';
+    html += '<div class="icon-large">&#128274;</div>';
+    html += '<h2>请先登录</h2>';
+    html += '<p>使用您的姓名和密码登录后查看活动排期</p>';
+    html += '<button class="btn btn-primary" style="margin-top:16px;" onclick="openLoginModal()">登录系统</button>';
+    html += '</div>';
+    container.innerHTML = html;
+    return;
+  }
+
   // Count stats
   var ongoing = 0, upcoming = 0, done = 0;
   activities.forEach(function(a) {
@@ -439,6 +480,8 @@ function renderSchedule() {
 
   html += '<div class="top-bar">';
   html += '<div><h1 class="page-title">活动排期</h1><p class="page-desc">Q3 活动时间节点一览，按状态、类别、月份多维度呈现';
+  var u = getCurrentUser();
+  html += ' <span style="font-size:12px;color:var(--text-secondary);">当前：'+escHtml(u.name)+'</span>';
   if (isAdmin()) html += ' <span class="admin-indicator">管理员模式</span>';
   html += '</p></div></div>';
 
