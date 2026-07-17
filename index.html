@@ -528,11 +528,7 @@ function loadActivities() {
 }
 
 function saveActivities(data) {
-  try {
-    localStorage.setItem('qx_activities', JSON.stringify(data));
-  } catch(e) {
-    alert('保存失败：存储空间不足。邀请函文件过大，请使用网页链接方式添加。');
-  }
+  localStorage.setItem('qx_activities', JSON.stringify(data));
 }
 
 var activities = loadActivities();
@@ -808,13 +804,13 @@ function openActivity(id) {
   html += '<div class="invite-section">';
   html += '<div class="label">邀请函</div>';
   if (a.invitation) {
-    var isUrl = a.invitationType === 'url' || /^https?:\/\//.test(a.invitation);
+    var isUrl = a.invitationType === 'url' || /^https?:\/\//.test(a.invitation) || a.invitation.indexOf('idx:') === -1;
     if (isUrl) {
       html += '<a href="'+escHtml(a.invitation)+'" target="_blank" class="btn btn-primary" style="margin-right:8px;">打开链接</a>';
     } else {
-      html += '<a href="'+escHtml(a.invitation)+'" class="btn btn-primary" download style="margin-right:8px;">下载邀请函</a>';
+      html += '<button class="btn btn-primary" style="margin-right:8px;" onclick="downloadInvite('+a.id+')">下载邀请函</button>';
     }
-    html += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;word-break:break-all;">'+(isUrl ? '链接：' : '已上传文件')+escHtml(isUrl ? a.invitation : a.invitationName || '')+'</div>';
+    html += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;word-break:break-all;">'+(isUrl ? '链接：' : '已上传文件：')+escHtml(isUrl ? a.invitation : a.invitationName || '')+'</div>';
     if (isAdmin()) {
       html += '<button class="btn btn-outline btn-small" style="margin-top:6px;" onclick="removeInvitation('+a.id+')">移除</button>';
     }
@@ -884,19 +880,46 @@ function deleteActivity(id) {
   closeModal();
 }
 
+// ===== IndexedDB for invitation files =====
+var inviteDB;
+(function initInviteDB() {
+  var req = indexedDB.open('qx_invites', 1);
+  req.onupgradeneeded = function(e) {
+    e.target.result.createObjectStore('files');
+  };
+  req.onsuccess = function(e) { inviteDB = e.target.result; };
+})();
+
+function saveInviteFile(id, file, callback) {
+  if (!inviteDB) { setTimeout(function(){ saveInviteFile(id, file, callback); }, 200); return; }
+  var tx = inviteDB.transaction('files', 'readwrite');
+  tx.objectStore('files').put(file, 'invite_'+id);
+  tx.oncomplete = function() { callback(); };
+}
+
+function getInviteFile(id, callback) {
+  if (!inviteDB) { setTimeout(function(){ getInviteFile(id, callback); }, 200); return; }
+  var tx = inviteDB.transaction('files', 'readonly');
+  var req = tx.objectStore('files').get('invite_'+id);
+  req.onsuccess = function() { callback(req.result); };
+}
+
+function deleteInviteFile(id) {
+  if (!inviteDB) return;
+  var tx = inviteDB.transaction('files', 'readwrite');
+  tx.objectStore('files').delete('invite_'+id);
+}
+
 // ===== Admin: Upload Invitation (file) =====
 function handleInviteUpload(id, input) {
   var file = input.files[0];
   if (!file) return;
   document.getElementById('file-name-'+id).textContent = file.name;
-  var reader = new FileReader();
-  reader.onload = function(e) {
+  saveInviteFile(id, file, function() {
     var a = getActivityById(id);
-    if (a) { a.invitation = e.target.result; a.invitationType = 'file'; a.invitationName = file.name; saveActivities(activities); }
-    // Update invitation UI in place without recreating entire modal
+    if (a) { a.invitation = 'idx:'+id; a.invitationType = 'file'; a.invitationName = file.name; saveActivities(activities); }
     updateInviteUI(id);
-  };
-  reader.readAsDataURL(file);
+  });
 }
 
 // ===== Admin: Save Invite URL =====
@@ -908,11 +931,27 @@ function saveInviteUrl(id) {
   updateInviteUI(id);
 }
 
+// ===== Download Invitation =====
+function downloadInvite(id) {
+  getInviteFile(id, function(file) {
+    if (file) {
+      var url = URL.createObjectURL(file);
+      var a = document.createElement('a');
+      a.href = url; a.download = file.name || '邀请函';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    } else {
+      alert('文件加载失败，请重试');
+    }
+  });
+}
+
 // ===== Admin: Remove Invitation =====
 function removeInvitation(id) {
   if (!confirm('确定移除邀请函？')) return;
   var a = getActivityById(id);
-  if (a) { a.invitation = ''; a.invitationType = ''; a.invitationName = ''; saveActivities(activities); }
+  if (a) { deleteInviteFile(id); a.invitation = ''; a.invitationType = ''; a.invitationName = ''; saveActivities(activities); }
   updateInviteUI(id);
 }
 
@@ -924,13 +963,13 @@ function updateInviteUI(id) {
   if (!section) return;
   var html = '<div class="label">邀请函</div>';
   if (a.invitation) {
-    var isUrl = a.invitationType === 'url' || /^https?:\/\//.test(a.invitation);
+    var isUrl = a.invitationType === 'url' || /^https?:\/\//.test(a.invitation) || a.invitation.indexOf('idx:') === -1;
     if (isUrl) {
       html += '<a href="'+escHtml(a.invitation)+'" target="_blank" class="btn btn-primary" style="margin-right:8px;">打开链接</a>';
     } else {
-      html += '<a href="'+escHtml(a.invitation)+'" class="btn btn-primary" download style="margin-right:8px;">下载邀请函</a>';
+      html += '<button class="btn btn-primary" style="margin-right:8px;" onclick="downloadInvite('+id+')">下载邀请函</button>';
     }
-    html += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;word-break:break-all;">'+(isUrl ? '链接：' : '已上传文件')+escHtml(isUrl ? a.invitation : a.invitationName || '')+'</div>';
+    html += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;word-break:break-all;">'+(isUrl ? '链接：' : '已上传文件：')+escHtml(isUrl ? a.invitation : a.invitationName || '')+'</div>';
     if (isAdmin()) {
       html += '<button class="btn btn-outline btn-small" style="margin-top:6px;" onclick="removeInvitation('+id+')">移除</button>';
     }
