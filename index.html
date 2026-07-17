@@ -528,14 +528,54 @@ function loadActivities() {
 }
 
 function saveActivities(data) {
-  localStorage.setItem('qx_activities', JSON.stringify(data));
+  try {
+    localStorage.setItem('qx_activities', JSON.stringify(data));
+  } catch(e) {
+    alert('保存失败：存储空间不足。邀请函文件过大，请使用网页链接方式添加。');
+  }
 }
 
 var activities = loadActivities();
 
-function getActivityById(id) {
-  return activities.find(function(a) { return a.id === id; });
-}
+// ===== Default activities (fallback seed data) =====
+var DEFAULT_ACTIVITIES = [
+  { id: 1,  title: 'AWB经营私董会',               cat: '营销活动', date: '7月14日',          status: 'ongoing',  contact: '赵向瑜 / 董越' },
+  { id: 2,  title: '跨境三单俱乐部',               cat: '育商活动', date: '7月14日 - 17日',   status: 'ongoing' },
+  { id: 3,  title: '新签沙龙',                     cat: '营销活动', date: '7月15日',          status: 'ongoing',  contact: '赵向瑜 / 董越' },
+  { id: 4,  title: 'Accio Work — 业务增长SOP',     cat: '育商活动', date: '7月16日 - 17日',   status: 'ongoing',  contact: '赵向瑜 / 董越' },
+  { id: 5,  title: '区域小百大',                   cat: '内部会议', date: '7月17日',          status: 'ongoing' },
+  { id: 6,  title: '团战102杭州集结 & 达人赛选手集结', cat: '育商活动', date: '7月20日 - 21日', status: 'upcoming' },
+  { id: 7,  title: 'AWB私董会',                    cat: '营销活动', date: '7月23日 - 24日',   status: 'upcoming' },
+  { id: 8,  title: '区域峰会',                     cat: '营销活动', date: '7月28日',          status: 'upcoming' },
+  { id: 9,  title: '公司游学（重庆）',             cat: '营销活动', date: '7月30日 - 31日',   status: 'upcoming' },
+  { id: 10, title: '询盘诊断会 | 达人赛区域决赛',   cat: '育商活动', date: '7月28日 - 31日',   status: 'upcoming' },
+  { id: 11, title: '新签沙龙',                     cat: '营销活动', date: '7月9日',           status: 'done',     contact: '申赵赵 / 董越' },
+  { id: 12, title: 'Accio Work 成交营',            cat: '育商活动', date: '7月9日',           status: 'done',     contact: '申赵赵 / 董越' },
+  { id: 13, title: 'Accio Work 私教课',            cat: '育商活动', date: '7月10日',          status: 'done',     contact: '申赵赵 / 董越' },
+  { id: 14, title: '启动会',                       cat: '内部会议', date: '8月2日 - 3日',     status: 'upcoming' },
+  { id: 15, title: '新签沙龙',                     cat: '营销活动', date: '8月4日',           status: 'upcoming' },
+  { id: 16, title: 'Accio Work 成交营 · 备战9月采购节', cat: '育商活动', date: '8月6日 - 7日', status: 'upcoming' },
+  { id: 17, title: '橙功营',                       cat: '育商活动', date: '8月9日 - 11日',    status: 'upcoming' },
+  { id: 18, title: 'Accio Work 跨境三单俱乐部',     cat: '育商活动', date: '8月11日 - 14日',   status: 'upcoming' },
+  { id: 19, title: '公司峰会',                     cat: '营销活动', date: '8月13日 - 14日',   status: 'upcoming' },
+  { id: 20, title: 'Accio Work 成交营',            cat: '育商活动', date: '8月14日',          status: 'upcoming' },
+  { id: 21, title: '采购节军政启动会（上午）& 全员启动会（下午）', cat: '育商活动', date: '8月18日', status: 'upcoming' },
+  { id: 22, title: '管理论坛',                     cat: '内部会议', date: '8月18日',          status: 'upcoming' },
+  { id: 23, title: '新签沙龙',                     cat: '营销活动', date: '8月19日',          status: 'upcoming' },
+  { id: 24, title: 'Accio Work 成交营 · 业务增长SOP', cat: '育商活动', date: '8月20日',        status: 'upcoming' },
+  { id: 25, title: '创业大赛实力赛道决赛 + 杭州商家大会', cat: '营销活动', date: '8月20日 - 22日', status: 'upcoming' },
+  { id: 26, title: '新签沙龙',                     cat: '营销活动', date: '8月27日',          status: 'upcoming' },
+  { id: 27, title: '百团 1v1 陪跑对焦',            cat: '育商活动', date: '8月27日 - 28日',   status: 'upcoming' },
+  { id: 28, title: '达人赛创业赛道总决赛 + 游学（成都）', cat: '营销活动', date: '9月4日 - 5日',  status: 'upcoming' },
+  { id: 29, title: '公司峰会',                     cat: '营销活动', date: '9月9日',           status: 'upcoming' },
+  { id: 30, title: '四五星大区招商',               cat: '营销活动', date: '9月10日 - 12日',    status: 'upcoming' },
+  { id: 31, title: '成都游学（区域）',             cat: '营销活动', date: '9月13日 - 15日',    status: 'upcoming' },
+  { id: 32, title: '采购节中期复盘启动',           cat: '育商活动', date: '9月14日',          status: 'upcoming' },
+  { id: 33, title: 'Accio Work 成交营',            cat: '育商活动', date: '9月15日',          status: 'upcoming' },
+  { id: 34, title: '新签沙龙',                     cat: '营销活动', date: '9月17日 - 18日',    status: 'upcoming' },
+  { id: 35, title: '核心商家季度交流会',           cat: '育商活动', date: '9月17日 - 18日',    status: 'upcoming' },
+  { id: 36, title: '本地游学',                     cat: '营销活动', date: '9月23日',          status: 'upcoming' }
+];
 
 // ===== Calendar Helpers =====
 var calendarMonth = 7; // default July
