@@ -757,12 +757,6 @@ function openActivity(id) {
     html += '<div class="edit-row"><label>活动简介</label>';
     html += '<input type="text" id="edit-desc-'+a.id+'" value="'+escHtml(a.desc||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>';
 
-    html += '<div style="display:flex;gap:8px;margin-top:12px;">';
-    html += '<button class="btn btn-primary btn-small" onclick="saveActivityEdit('+a.id+')">保存</button>';
-    html += '<button class="btn btn-outline btn-small" onclick="cancelActivityEdit()">取消</button>';
-    html += '<button class="btn btn-outline btn-small" style="margin-left:auto;color:#c04040;border-color:#c04040;" onclick="deleteActivity('+a.id+')">删除活动</button>';
-    html += '</div>';
-
     html += '</div>';
   }
 
@@ -802,6 +796,15 @@ function openActivity(id) {
     }
   }
   html += '</div>';
+
+  // Save/cancel at bottom (admin only)
+  if (isAdmin()) {
+    html += '<div style="display:flex;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">';
+    html += '<button class="btn btn-primary" onclick="saveActivityEdit('+a.id+')">保存</button>';
+    html += '<button class="btn btn-outline" onclick="cancelActivityEdit()">取消</button>';
+    html += '<button class="btn btn-outline" style="margin-left:auto;color:#c04040;border-color:#c04040;" onclick="deleteActivity('+a.id+')">删除活动</button>';
+    html += '</div>';
+  }
 
   body.innerHTML = html;
   document.getElementById('activity-modal').classList.add('open');
@@ -846,7 +849,8 @@ function handleInviteUpload(id, input) {
   reader.onload = function(e) {
     var a = getActivityById(id);
     if (a) { a.invitation = e.target.result; a.invitationType = 'file'; a.invitationName = file.name; saveActivities(activities); }
-    openActivity(id);
+    // Update invitation UI in place without recreating entire modal
+    updateInviteUI(id);
   };
   reader.readAsDataURL(file);
 }
@@ -857,7 +861,7 @@ function saveInviteUrl(id) {
   if (!url) return;
   var a = getActivityById(id);
   if (a) { a.invitation = url; a.invitationType = 'url'; a.invitationName = ''; saveActivities(activities); }
-  openActivity(id);
+  updateInviteUI(id);
 }
 
 // ===== Admin: Remove Invitation =====
@@ -865,7 +869,45 @@ function removeInvitation(id) {
   if (!confirm('确定移除邀请函？')) return;
   var a = getActivityById(id);
   if (a) { a.invitation = ''; a.invitationType = ''; a.invitationName = ''; saveActivities(activities); }
-  openActivity(id);
+  updateInviteUI(id);
+}
+
+// ===== Update Invitation UI in-place =====
+function updateInviteUI(id) {
+  var a = getActivityById(id);
+  if (!a) return;
+  var section = document.querySelector('#activity-modal .invite-section');
+  if (!section) return;
+  var html = '<div class="label">邀请函</div>';
+  if (a.invitation) {
+    var isUrl = a.invitationType === 'url' || /^https?:\/\//.test(a.invitation);
+    if (isUrl) {
+      html += '<a href="'+escHtml(a.invitation)+'" target="_blank" class="btn btn-primary" style="margin-right:8px;">打开链接</a>';
+    } else {
+      html += '<a href="'+escHtml(a.invitation)+'" class="btn btn-primary" download style="margin-right:8px;">下载邀请函</a>';
+    }
+    html += '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;word-break:break-all;">'+(isUrl ? '链接：' : '已上传文件')+escHtml(isUrl ? a.invitation : a.invitationName || '')+'</div>';
+    if (isAdmin()) {
+      html += '<button class="btn btn-outline btn-small" style="margin-top:6px;" onclick="removeInvitation('+id+')">移除</button>';
+    }
+  } else {
+    if (isAdmin()) {
+      html += '<p class="no-invite" style="margin-bottom:12px;">暂未上传邀请函，可通过以下两种方式添加：</p>';
+      html += '<div class="edit-row"><label>网页链接</label>';
+      html += '<div style="display:flex;gap:8px;">';
+      html += '<input type="text" id="invite-url-'+id+'" placeholder="粘贴邀请函链接" style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;">';
+      html += '<button class="btn btn-primary btn-small" onclick="saveInviteUrl('+id+')">保存链接</button>';
+      html += '</div></div>';
+      html += '<div class="edit-row"><label>上传文件</label>';
+      html += '<input type="file" id="invite-file-'+id+'" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="handleInviteUpload('+id+', this)" style="display:none;">';
+      html += '<button class="btn btn-outline btn-small" onclick="document.getElementById(\'invite-file-'+id+'\').click()">选择文件上传</button>';
+      html += '<span id="file-name-'+id+'" style="font-size:12px;color:var(--text-secondary);margin-left:8px;"></span>';
+      html += '</div>';
+    } else {
+      html += '<p class="no-invite">暂未上传邀请函</p>';
+    }
+  }
+  section.innerHTML = html;
 }
 
 // ===== Page Switch =====
