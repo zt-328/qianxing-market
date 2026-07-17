@@ -418,19 +418,28 @@ function isLoggedIn() {
 function doLogin() {
   var name = document.getElementById('login-name').value.trim();
   var pwd = document.getElementById('login-pwd-input').value;
-  var user = USERS.find(function(u) { return u.name === name && u.pwd === pwd; });
-  if (user) {
-    setCurrentUser(user);
-    document.getElementById('login-page').classList.remove('active');
-    document.getElementById('app-container').classList.add('active');
-    document.getElementById('login-page-error').style.display = 'none';
-    document.getElementById('login-name').value = '';
-    document.getElementById('login-pwd-input').value = '';
-    renderLoginUI();
-    renderSchedule();
-  } else {
-    document.getElementById('login-page-error').style.display = 'block';
+  var errEl = document.getElementById('login-page-error');
+  if (!name) { errEl.textContent = '请输入姓名'; errEl.style.display = 'block'; return; }
+  if (!pwd) { errEl.textContent = '请输入密码'; errEl.style.display = 'block'; return; }
+  var userByName = USERS.find(function(u) { return u.name === name; });
+  if (!userByName) {
+    errEl.textContent = '姓名不存在，请检查后重试';
+    errEl.style.display = 'block';
+    return;
   }
+  if (userByName.pwd !== pwd) {
+    errEl.textContent = '密码错误，请重试';
+    errEl.style.display = 'block';
+    return;
+  }
+  setCurrentUser(userByName);
+  document.getElementById('login-page').classList.remove('active');
+  document.getElementById('app-container').classList.add('active');
+  errEl.style.display = 'none';
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-pwd-input').value = '';
+  renderLoginUI();
+  renderSchedule();
 }
 
 function doLogout() {
@@ -710,46 +719,6 @@ function removeInvitation(id) {
   var a = getActivityById(id);
   if (a) { a.invitation = ''; a.invitationType = ''; a.invitationName = ''; saveActivities(activities); }
   openActivity(id);
-}
-
-// ===== Login =====
-function openLoginModal() {
-  document.getElementById('login-modal').classList.add('open');
-  document.getElementById('login-pwd').value = '';
-  document.getElementById('login-error').style.display = 'none';
-  setTimeout(function() { document.getElementById('login-pwd').focus(); }, 100);
-}
-
-function closeLoginModal() {
-  document.getElementById('login-modal').classList.remove('open');
-}
-
-function doLogin() {
-  var pwd = document.getElementById('login-pwd').value;
-  if (pwd === ADMIN_PASSWORD) {
-    setAdmin(true);
-    closeLoginModal();
-    renderLoginUI();
-    renderSchedule();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
-  }
-}
-
-function doLogout() {
-  setAdmin(false);
-  renderLoginUI();
-  renderSchedule();
-}
-
-// ===== Login UI =====
-function renderLoginUI() {
-  var el = document.getElementById('sidebar-login');
-  if (isAdmin()) {
-    el.innerHTML = '<div class="user-info">当前：<span class="role">管理员</span><br><span class="logout-link" onclick="doLogout()">退出登录</span></div>';
-  } else {
-    el.innerHTML = '<button class="login-btn" onclick="openLoginModal()">&#128274; 管理员登录</button>';
-  }
 }
 
 // ===== Page Switch =====
