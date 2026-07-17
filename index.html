@@ -209,6 +209,37 @@
   .app-container { display: none; width: 100%; height: 100%; }
   .app-container.active { display: flex; }
 
+  /* Calendar */
+  .cal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .cal-month-btn {
+    padding: 6px 16px; border: 1px solid var(--border); border-radius: 20px;
+    background: var(--card-bg); font-size: 14px; cursor: pointer; color: var(--text);
+    transition: all 0.15s;
+  }
+  .cal-month-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .cal-month-btn:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .cal-dow { background: var(--card-bg); text-align: center; padding: 10px 0; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+  .cal-dow.weekend { color: #c04040; }
+  .cal-day { background: var(--card-bg); min-height: 100px; padding: 6px; position: relative; }
+  .cal-day.empty { background: #f8f9fb; }
+  .cal-day .day-num { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .cal-day.today .day-num { background: var(--primary); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; }
+  .cal-event {
+    display: block; font-size: 11px; padding: 2px 6px; border-radius: 3px; margin-bottom: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+    line-height: 1.5; transition: opacity 0.15s;
+  }
+  .cal-event:hover { opacity: 0.8; }
+  .cal-event.no-click { cursor: default; opacity: 0.6; }
+  .cal-event.no-click:hover { opacity: 0.6; }
+  .cal-more { font-size: 11px; color: var(--text-secondary); cursor: pointer; padding: 2px 6px; }
+  .cal-more:hover { color: var(--primary); }
+  @media (max-width: 768px) {
+    .cal-day { min-height: 70px; padding: 4px; }
+    .cal-event { font-size: 10px; padding: 1px 4px; }
+  }
+
   /* Placeholder */
   .placeholder {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -481,18 +512,29 @@ function getActivityById(id) {
   return activities.find(function(a) { return a.id === id; });
 }
 
-// ===== Render Schedule =====
-var sectionDefs = [
-  { key: 'jul-w1', label: '7月 · 本周进行中', month: null },
-  { key: 'jul-w2', label: '7月 · 下周开始', month: null },
-  { key: 'jul-w3', label: '7月 · 已完成', month: null },
-  { key: 'aug-w1', label: '8月上旬（1日 - 7日）', month: { label: '8月', note: '全部即将开始' } },
-  { key: 'aug-w2', label: '8月中旬（9日 - 15日）', month: null },
-  { key: 'aug-w3', label: '8月下旬（18日 - 28日）', month: null },
-  { key: 'sep-w1', label: '9月上旬（1日 - 12日）', month: { label: '9月', note: '全部即将开始' } },
-  { key: 'sep-w2', label: '9月中旬（13日 - 19日）', month: null },
-  { key: 'sep-w3', label: '9月下旬（20日 - 30日）', month: null }
-];
+// ===== Calendar Helpers =====
+var calendarMonth = 7; // default July
+
+function parseActivityDates(a) {
+  var results = [];
+  var d = a.date;
+  if (!d) return results;
+  // Match "7月14日" or "7月14日 - 17日" or "7月28日 - 31日"
+  var single = d.match(/^(\d+)月(\d+)日$/);
+  if (single) {
+    results.push({ month: parseInt(single[1]), day: parseInt(single[2]) });
+    return results;
+  }
+  var range = d.match(/^(\d+)月(\d+)日\s*[-–]\s*(\d+)日$/);
+  if (range) {
+    var m = parseInt(range[1]), from = parseInt(range[2]), to = parseInt(range[3]);
+    for (var day = from; day <= to; day++) {
+      results.push({ month: m, day: day });
+    }
+    return results;
+  }
+  return results;
+}
 
 function renderSchedule() {
   var container = document.getElementById('page-schedule');
@@ -506,9 +548,9 @@ function renderSchedule() {
     else if (a.status === 'done') done++;
   });
 
-  html += '<div class="top-bar">';
-  html += '<div><h1 class="page-title">活动排期</h1><p class="page-desc">Q3 活动时间节点一览，按状态、类别、月份多维度呈现';
   var u = getCurrentUser();
+  html += '<div class="top-bar">';
+  html += '<div><h1 class="page-title">活动排期</h1><p class="page-desc">Q3 活动日历';
   html += ' <span style="font-size:12px;color:var(--text-secondary);">当前：'+escHtml(u.name)+'</span>';
   if (isAdmin()) html += ' <span class="admin-indicator">管理员模式</span>';
   html += '</p></div></div>';
@@ -520,56 +562,77 @@ function renderSchedule() {
   html += '</div>';
 
   // Legend
-  html += '<div style="display:flex;gap:16px;margin-bottom:24px;font-size:13px;color:var(--text-secondary);flex-wrap:wrap;">';
+  html += '<div style="display:flex;gap:16px;margin-bottom:16px;font-size:13px;color:var(--text-secondary);flex-wrap:wrap;">';
   CAT_KEYS.forEach(function(cat) {
     var c = CATEGORIES[cat];
     html += '<span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:3px;background:'+c.color+';"></span> '+cat+'</span>';
   });
   html += '</div>';
 
-  // Render sections
-  sectionDefs.forEach(function(sd) {
-    if (sd.month) {
-      html += '<div class="month-divider"><span style="font-size:18px;font-weight:700;color:var(--text);">'+sd.month.label+'</span><span style="font-size:13px;color:var(--text-secondary);margin-left:8px;">'+sd.month.note+'</span></div>';
-    }
-    html += '<div class="section-title">'+sd.label+'</div>';
+  // Month selector
+  var months = [7, 8, 9];
+  html += '<div class="cal-header">';
+  months.forEach(function(m) {
+    html += '<button class="cal-month-btn'+(calendarMonth===m?' active':'')+'" onclick="switchMonth('+m+')">'+m+'月</button>';
+  });
+  html += '</div>';
 
-    var items = activities.filter(function(a) { return a.section === sd.key; });
-    if (items.length === 0) {
-      html += '<p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">暂无活动</p>';
-      return;
-    }
-    html += '<div class="card-grid">';
-    items.forEach(function(a) {
-      var isInternal = a.cat === '内部会议';
-      var clickable = !isInternal;
-      var cardClass = 'card';
-      if (clickable) cardClass += ' clickable';
-      else cardClass += ' no-click';
-      var st = STATUS_TAGS[a.status];
-      var catStyle = CATEGORIES[a.cat];
-
-      html += '<div class="'+cardClass+'"' + (clickable ? ' onclick="openActivity('+a.id+')"' : '') + '>';
-      if (isAdmin()) {
-        html += '<button class="admin-edit-btn" onclick="event.stopPropagation();openActivity('+a.id+')" title="编辑">&#9998;</button>';
-      }
-      html += '<span class="tag '+st.cls+'">'+st.label+'</span>';
-      html += '<span class="tag" style="background:'+catStyle.bg+';color:'+catStyle.color+';">'+a.cat+'</span>';
-      html += '<h3>'+escHtml(a.title)+'</h3>';
-      html += '<p>'+escHtml(a.date)+'</p>';
-      if (a.speaker) html += '<div class="meta"><span>&#127908; '+escHtml(a.speaker)+'</span></div>';
-      if (a.target) html += '<div class="meta"><span>&#127919; '+escHtml(a.target)+'</span></div>';
-      if (a.contact) html += '<div class="meta"><span>&#128100; '+escHtml(a.contact)+'</span></div>';
-      if (a.invitation) {
-        var isLink = a.invitationType === 'url' || /^https?:\/\//.test(a.invitation);
-        html += '<div class="meta"><span style="color:var(--primary);">'+(isLink ? '&#128279; 邀请函链接' : '&#128206; 已有邀请函')+'</span></div>';
-      }
-      html += '</div>';
-    });
-    html += '</div>';
+  // Day headers
+  var dows = ['日', '一', '二', '三', '四', '五', '六'];
+  html += '<div class="cal-grid">';
+  dows.forEach(function(dow, idx) {
+    html += '<div class="cal-dow'+(idx===0||idx===6?' weekend':'')+'">'+dow+'</div>';
   });
 
+  // Build calendar for selected month
+  var daysInMonth = calendarMonth === 7 ? 31 : (calendarMonth === 8 ? 31 : 30);
+  // July 2026: 1=Wed, Aug: 1=Sat, Sep: 1=Tue
+  var firstDow = calendarMonth === 7 ? 3 : (calendarMonth === 8 ? 6 : 2);
+
+  // Map activities to days
+  var dayMap = {};
+  for (var d = 1; d <= daysInMonth; d++) { dayMap[d] = []; }
+  activities.forEach(function(a) {
+    var dates = parseActivityDates(a);
+    dates.forEach(function(dd) {
+      if (dd.month === calendarMonth && dayMap[dd.day]) {
+        dayMap[dd.day].push(a);
+      }
+    });
+  });
+
+  // Fill leading empty cells
+  for (var i = 0; i < firstDow; i++) {
+    html += '<div class="cal-day empty"></div>';
+  }
+
+  // Render days
+  for (var day = 1; day <= daysInMonth; day++) {
+    var isToday = false; // could add logic for today
+    html += '<div class="cal-day'+(isToday?' today':'')+'">';
+    html += '<div class="day-num">'+day+'</div>';
+
+    var events = dayMap[day] || [];
+    var showCount = Math.min(events.length, 3);
+    for (var e = 0; e < showCount; e++) {
+      var ev = events[e];
+      var catStyle = CATEGORIES[ev.cat];
+      var isInternal = ev.cat === '内部会议';
+      html += '<span class="cal-event'+(isInternal?' no-click':'')+'" style="background:'+catStyle.bg+';color:'+catStyle.color+';border-left:3px solid '+catStyle.color+';" title="'+escHtml(ev.title)+'" onclick="'+(isInternal?'':'openActivity('+ev.id+')')+'">'+escHtml(ev.title)+'</span>';
+    }
+    if (events.length > 3) {
+      html += '<span class="cal-more" onclick="alert(\'当天共'+events.length+'场活动\')">+'+ (events.length - 3) +' 更多</span>';
+    }
+    html += '</div>';
+  }
+
+  html += '</div>'; // cal-grid
   container.innerHTML = html;
+}
+
+function switchMonth(m) {
+  calendarMonth = m;
+  renderSchedule();
 }
 
 function escHtml(s) {
