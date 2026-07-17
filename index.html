@@ -537,6 +537,10 @@ function saveActivities(data) {
 
 var activities = loadActivities();
 
+function getActivityById(id) {
+  return activities.find(function(a) { return a.id === id; });
+}
+
 // ===== Default activities (fallback seed data) =====
 var DEFAULT_ACTIVITIES = [
   { id: 1,  title: 'AWB经营私董会',               cat: '营销活动', date: '7月14日',          status: 'ongoing',  contact: '赵向瑜 / 董越' },
