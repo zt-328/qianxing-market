@@ -313,6 +313,22 @@
 </div>
 
 <script>
+// ===== Config =====
+const CATEGORIES = {
+  '秒杀节奏': { bg: '#EAF0F8', color: '#4877B5' },
+  '育商活动': { bg: '#FFF5E8', color: '#E8A838' },
+  '营销活动': { bg: '#EDF2E8', color: '#5B9E6F' },
+  '内部会议': { bg: '#FFFDE8', color: '#B8A020' }
+};
+
+const CAT_KEYS = Object.keys(CATEGORIES);
+
+const STATUS_TAGS = {
+  ongoing:  { cls: 'tag-active',   label: '进行中' },
+  upcoming: { cls: 'tag-upcoming', label: '即将开始' },
+  done:     { cls: 'tag-done',     label: '已完成' }
+};
+
 // ===== User Data =====
 var USERS = [
   { name: '王帅飞', pwd: '123456', role: '客户经理' },
@@ -364,7 +380,7 @@ function setCurrentUser(user) {
 
 function isAdmin() {
   var u = getCurrentUser();
-  return u && u.role === '管理员';
+  return u && (u.role === '管理员' || u.role === '运营主管');
 }
 
 function isLoggedIn() {
