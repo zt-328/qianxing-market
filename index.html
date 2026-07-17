@@ -240,6 +240,29 @@
     .cal-event { font-size: 10px; padding: 1px 4px; }
   }
 
+  /* Activity type cards */
+  .type-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
+  .type-card {
+    background: var(--card-bg); border-radius: 12px; padding: 36px 24px;
+    box-shadow: var(--shadow); border: 2px solid var(--border); cursor: pointer;
+    text-align: center; transition: all 0.2s ease;
+  }
+  .type-card:hover { border-color: var(--primary); box-shadow: 0 6px 24px rgba(255,106,0,0.12); transform: translateY(-2px); }
+  .type-card .tc-icon { width: 56px; height: 56px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; }
+  .type-card .tc-icon svg { width: 48px; height: 48px; }
+  .type-card h3 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .type-card .tc-sub { font-size: 13px; color: var(--text-secondary); }
+  .type-detail { display: none; }
+  .type-detail.active { display: block; }
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--primary);
+    cursor: pointer; margin-bottom: 20px; font-weight: 500;
+  }
+  .back-btn:hover { opacity: 0.8; }
+  @media (max-width: 768px) {
+    .type-cards { grid-template-columns: 1fr; }
+  }
+
   /* Placeholder */
   .placeholder {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -342,142 +365,107 @@
 
   <section class="page-section" id="page-activity-types">
     <h1 class="page-title">活动类型</h1>
-    <p class="page-desc">陕西前星科技作为阿里巴巴国际站官方渠道商，围绕商家全生命周期，构建了"招商获客—培育赋能—深度变现"的三层活动体系：<b>新签活动、育商活动、付费活动</b>。</p>
+    <p class="page-desc">点击下方卡片，查看各类活动的详细介绍与近期排期</p>
 
-    <div style="margin-bottom:32px;">
-      <div class="section-title">一、新签活动（招商获客）</div>
-      <p style="font-size:14px;color:var(--text);line-height:1.9;margin-bottom:16px;">
-        新签活动的核心目的是<b>获客拉新</b>——让本地尚未接触跨境电商的传统企业了解阿里巴巴国际站，建立对平台的信任，最终转化为签约客户。按规模分为日常沙龙和大型峰会。
-      </p>
-
-      <div style="background:var(--card-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:16px;">
-        <h3 style="font-size:16px;color:var(--primary);margin-bottom:4px;">日常沙龙</h3>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">高频举办的小型招商活动，门槛低、转化路径短，是新签获客的基本盘。</p>
-        <table style="width:100%;font-size:13px;line-height:2.2;border-collapse:collapse;">
-          <tr><td style="color:var(--text-secondary);width:80px;vertical-align:top;">场地</td><td>公司自有会议室，营造亲切、私密的交流氛围</td></tr>
-          <tr><td style="color:var(--text-secondary);">规模</td><td>每场约 20 位意向商家</td></tr>
-          <tr><td style="color:var(--text-secondary);">目标客群</td><td>对跨境电商感兴趣但尚未入局的本地企业主，通过活动建立对国际站平台价值的认知，进而转化为签约客户，或引导其报名付费游学等深度活动</td></tr>
-          <tr><td style="color:var(--text-secondary);">标准流程</td>
-            <td>
-              1. <b>标杆分享</b>——邀请本地成功客户现身说法，讲述自己借助国际站从零起步、实现外贸转型的真实创业故事，以同行经历打消观望顾虑<br>
-              2. <b>趋势洞察</b>——销售主管分享 AI 赋能极简创业的实践路径、全球跨境电商最新趋势与机遇，帮助客户看清方向<br>
-              3. <b>平台介绍</b>——系统讲解阿里巴巴国际站核心功能、平台优势及本地化服务，配合典型客户案例展示，强化合作信心
-            </td>
-          </tr>
-          <tr><td style="color:var(--text-secondary);">关键产出</td><td>现场签约、预约付费活动、积累意向客户池</td></tr>
-        </table>
+    <!-- Three-button selection -->
+    <div class="type-cards" id="type-select">
+      <div class="type-card" onclick="showTypeDetail('newSign')">
+        <div class="tc-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" stroke="#FF6A00" stroke-width="2.5"/><path d="M24 12v24M12 24h24" stroke="#FF6A00" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <h3>新签活动</h3>
+        <div class="tc-sub">招商获客</div>
       </div>
+      <div class="type-card" onclick="showTypeDetail('yushang')">
+        <div class="tc-icon"><svg viewBox="0 0 48 48" fill="none"><rect x="6" y="10" width="36" height="28" rx="3" stroke="#E8A838" stroke-width="2.5"/><path d="M6 20h36M18 10v28M30 10v28" stroke="#E8A838" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        <h3>育商活动</h3>
+        <div class="tc-sub">培育赋能</div>
+      </div>
+      <div class="type-card" onclick="showTypeDetail('paid')">
+        <div class="tc-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="20" r="10" stroke="#5B9E6F" stroke-width="2.5"/><path d="M16 36l6-10 4 6 6-12" stroke="#5B9E6F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3>付费活动</h3>
+        <div class="tc-sub">深度变现</div>
+      </div>
+    </div>
 
-      <div style="background:var(--card-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);">
-        <h3 style="font-size:16px;color:var(--primary);margin-bottom:4px;">大型峰会</h3>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">高规格、强影响力的品牌活动，适合集中造势和大规模转化。</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-          <div style="background:var(--bg);border-radius:var(--radius);padding:16px;">
-            <h4 style="font-size:14px;color:var(--text);margin-bottom:8px;">公司级峰会</h4>
-            <table style="width:100%;font-size:13px;line-height:2.2;">
-              <tr><td style="color:var(--text-secondary);width:60px;">规模</td><td>约 150 人</td></tr>
-              <tr><td style="color:var(--text-secondary);">定位</td><td>日常沙龙的升级版，流程一致但规格更高、覆盖面更广，适合重要节点集中批量转化</td></tr>
-            </table>
-          </div>
-          <div style="background:var(--bg);border-radius:var(--radius);padding:16px;">
-            <h4 style="font-size:14px;color:var(--text);margin-bottom:8px;">区域级峰会</h4>
-            <table style="width:100%;font-size:13px;line-height:2.2;">
-              <tr><td style="color:var(--text-secondary);width:60px;">规模</td><td>500 ~ 1000 人</td></tr>
-              <tr><td style="color:var(--text-secondary);">流程亮点</td>
-                <td>
-                  在沙龙流程基础上新增三个重量级环节：<br>
-                  1. <b>政府致辞</b>——地方政府领导出席，为活动背书公信力<br>
-                  2. <b>宏观解读</b>——外贸形势变化、政策机遇与国际站战略动态<br>
-                  3. <b>全国标杆</b>——邀请全国级优秀商家分享企业转型历程<br>
-                  4. 之后衔接沙龙的标准分享内容
-                </td>
-              </tr>
-            </table>
-          </div>
+    <!-- Detail views -->
+    <div class="type-detail" id="type-newSign">
+      <div class="back-btn" onclick="showTypeSelect()">&larr; 返回活动类型</div>
+      <div class="section-title">新签活动（招商获客）</div>
+      <p style="font-size:14px;line-height:1.9;margin-bottom:24px;">核心目的是<b>获客拉新</b>——让本地尚未接触跨境电商的传统企业了解阿里巴巴国际站，建立信任并转化为签约客户。分为<b>日常沙龙</b>和<b>大型峰会</b>。</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+        <div style="background:var(--card-bg);border-radius:10px;padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);">
+          <h4 style="color:var(--primary);margin-bottom:8px;">日常沙龙</h4>
+          <table style="width:100%;font-size:13px;line-height:2;">
+            <tr><td style="color:var(--text-secondary);width:65px;">规模</td><td>约 20 人</td></tr>
+            <tr><td style="color:var(--text-secondary);">场地</td><td>公司会议室</td></tr>
+            <tr><td style="color:var(--text-secondary);">流程</td><td>本地标杆分享 → 趋势洞察 → 平台介绍</td></tr>
+            <tr><td style="color:var(--text-secondary);">产出</td><td>现场签约、积累意向客户</td></tr>
+          </table>
+        </div>
+        <div style="background:var(--card-bg);border-radius:10px;padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);">
+          <h4 style="color:var(--primary);margin-bottom:8px;">大型峰会</h4>
+          <table style="width:100%;font-size:13px;line-height:2;">
+            <tr><td style="color:var(--text-secondary);width:65px;">公司</td><td>约 150 人，沙龙升级版</td></tr>
+            <tr><td style="color:var(--text-secondary);">区域</td><td>500-1000 人，含政府致辞、全国标杆</td></tr>
+          </table>
         </div>
       </div>
+
+      <div class="section-title">近期新签活动</div>
+      <div class="card-grid" id="list-newSign"></div>
     </div>
 
-    <div style="margin-bottom:32px;">
-      <div class="section-title">二、育商活动（培育赋能）</div>
-      <p style="font-size:14px;color:var(--text);line-height:1.9;margin-bottom:16px;">
-        育商活动面向<b>已签约合作的商家</b>，核心目标是让客户"用起来、用得好、持续投入"，通过技能培训和标杆激励，帮助商家提升运营水平、增强平台粘性，推动升级和复购。分为培训赋能和营销转化两个方向。
-      </p>
+    <div class="type-detail" id="type-yushang">
+      <div class="back-btn" onclick="showTypeSelect()">&larr; 返回活动类型</div>
+      <div class="section-title">育商活动（培育赋能）</div>
+      <p style="font-size:14px;line-height:1.9;margin-bottom:24px;">面向<b>已合作商家</b>，通过技能培训和标杆激励帮助客户提升运营水平、增强平台粘性。分为<b>培训赋能</b>和<b>营销转化</b>。</p>
 
-      <div style="background:var(--card-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:16px;">
-        <h3 style="font-size:16px;color:var(--primary);margin-bottom:4px;">培训赋能</h3>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">为客户团队提供系统化、分岗位的专项技能培训，解决"不会做"的问题。</p>
-        <table style="width:100%;font-size:13px;line-height:2.2;">
-          <tr>
-            <td style="color:var(--text-secondary);width:100px;vertical-align:top;">业务培训</td>
-            <td>面向外贸业务员，涵盖客户开发策略、询盘分析与回复技巧、订单谈判与转化等前端核心能力，帮助客户团队拿到实实在在的订单结果</td>
-          </tr>
-          <tr>
-            <td style="color:var(--text-secondary);vertical-align:top;">运营培训</td>
-            <td>面向平台运营人员，聚焦国际站店铺搭建优化、高质量产品发布、P4P 直通车精准投放、数据诊断与复盘等平台操作技能，提升店铺流量与询盘转化效率</td>
-          </tr>
-          <tr>
-            <td style="color:var(--text-secondary);vertical-align:top;">Accio Work 培训</td>
-            <td>面向希望提效的商家，教授如何使用 Accio Work 智能工具进行 AI 辅助选品、自动化营销获客、数据驱动决策，帮助商家借助 AI 能力放大运营效果</td>
-          </tr>
-        </table>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+        <div style="background:var(--card-bg);border-radius:10px;padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);">
+          <h4 style="color:#E8A838;margin-bottom:8px;">培训赋能</h4>
+          <table style="width:100%;font-size:13px;line-height:2;">
+            <tr><td style="color:var(--text-secondary);width:65px;">业务</td><td>客户开发、询盘跟进、订单转化</td></tr>
+            <tr><td style="color:var(--text-secondary);">运营</td><td>店铺优化、P4P 投放、数据分析</td></tr>
+            <tr><td style="color:var(--text-secondary);">AI</td><td>Accio Work 智能获客与提效</td></tr>
+          </table>
+        </div>
+        <div style="background:var(--card-bg);border-radius:10px;padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);">
+          <h4 style="color:#E8A838;margin-bottom:8px;">营销转化</h4>
+          <table style="width:100%;font-size:13px;line-height:2;">
+            <tr><td style="color:var(--text-secondary);">目标</td><td>推动老客升级金品、增购产品</td></tr>
+            <tr><td style="color:var(--text-secondary);">形式</td><td>标杆分享会、升级闭门交流会</td></tr>
+          </table>
+        </div>
       </div>
 
-      <div style="background:var(--card-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);">
-        <h3 style="font-size:16px;color:var(--primary);margin-bottom:4px;">营销转化</h3>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">以老客户中高价值商家为核心，通过标杆示范效应推动服务升级和产品增购。</p>
-        <table style="width:100%;font-size:13px;line-height:2.2;">
-          <tr><td style="color:var(--text-secondary);width:80px;">目标</td><td>借助行业标杆商家的成功案例与增长故事，激励已合作商家从出口通升级为金品诚企，或增购 P4P、问鼎、顶展等高阶营销产品，释放商家增长潜力</td></tr>
-          <tr><td style="color:var(--text-secondary);">形式</td><td>老客专场分享会、金品升级闭门交流会、平台产品推介会等</td></tr>
-        </table>
-      </div>
+      <div class="section-title">近期育商活动</div>
+      <div class="card-grid" id="list-yushang"></div>
     </div>
 
-    <div>
-      <div class="section-title">三、付费活动（深度变现）</div>
-      <p style="font-size:14px;color:var(--text);line-height:1.9;margin-bottom:16px;">
-        付费活动是公司服务价值的集中体现与重要盈收板块。通过打造稀缺的深度体验和高阶课程，让客户为优质服务和成长机会买单。分为游学参访、橙功营/领航、核心商家大会三个产品线。
-      </p>
+    <div class="type-detail" id="type-paid">
+      <div class="back-btn" onclick="showTypeSelect()">&larr; 返回活动类型</div>
+      <div class="section-title">付费活动（深度变现）</div>
+      <p style="font-size:14px;line-height:1.9;margin-bottom:24px;">公司服务价值的集中体现与重要盈收板块。通过稀缺的深度体验和高阶课程实现客户价值最大化。分为<b>游学参访、橙功营/领航、核心商家大会</b>三个产品线。</p>
 
-      <div style="background:var(--card-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:16px;">
-        <h3 style="font-size:16px;color:var(--primary);margin-bottom:4px;">新客游学参访</h3>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">体验式招商利器——让潜在客户"亲眼看到"外贸生意的真实模样。</p>
-        <table style="width:100%;font-size:13px;line-height:2.2;">
-          <tr><td style="color:var(--text-secondary);width:80px;">目标客户</td><td>有意向但犹豫观望的新客户</td></tr>
-          <tr><td style="color:var(--text-secondary);">目的地</td><td>重庆、成都等外贸产业聚集、标杆商家密集的城市</td></tr>
-          <tr><td style="color:var(--text-secondary);">活动内容</td><td>组织客户走进当地优秀外贸企业实地参观，与创始人面对面交流创业历程与平台运营心得，沉浸式感受跨境电商的真实商业价值</td></tr>
-          <tr><td style="color:var(--text-secondary);">转化路径</td><td>通过"眼见为实"建立信任——客户亲眼看到同行借助国际站实现业务增长后，签约意愿大幅提升</td></tr>
-        </table>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
+        <div style="background:var(--card-bg);border-radius:10px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border);">
+          <h4 style="color:#5B9E6F;margin-bottom:6px;">新客游学</h4>
+          <p style="font-size:12px;color:var(--text-secondary);line-height:1.8;">重庆/成都参访优秀企业，眼见为实促成签约</p>
+        </div>
+        <div style="background:var(--card-bg);border-radius:10px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border);">
+          <h4 style="color:#5B9E6F;margin-bottom:6px;">橙功营/领航</h4>
+          <p style="font-size:12px;color:var(--text-secondary);line-height:1.8;">3天2夜老板进阶，管理+运营+思维三维提升</p>
+        </div>
+        <div style="background:var(--card-bg);border-radius:10px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border);">
+          <h4 style="color:#5B9E6F;margin-bottom:6px;">核心商家大会</h4>
+          <p style="font-size:12px;color:var(--text-secondary);line-height:1.8;">杭州/海南 400 人 4 天 3 夜，大方案攻坚</p>
+        </div>
       </div>
 
-      <div style="background:var(--card-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:16px;">
-        <h3 style="font-size:16px;color:var(--primary);margin-bottom:4px;">橙功营 / 领航活动</h3>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">面向已合作商家老板及高管的高阶赋能产品。</p>
-        <table style="width:100%;font-size:13px;line-height:2.2;">
-          <tr><td style="color:var(--text-secondary);width:80px;">目标人群</td><td>已合作国际站商家的企业负责人及核心管理团队</td></tr>
-          <tr><td style="color:var(--text-secondary);">形式</td><td>3 天 2 夜集中式深度学习，选址周边城市优质会场</td></tr>
-          <tr><td style="color:var(--text-secondary);">课程维度</td><td>
-            围绕三大模块系统提升：<br>
-            1. <b>管理升维</b>——外贸企业组织架构、团队搭建与绩效考核<br>
-            2. <b>平台深化</b>——国际站高阶运营策略、数据分析与精准投放<br>
-            3. <b>思维破局</b>——跨境电商新趋势、品牌化出海路径与商业模式创新
-          </td></tr>
-          <tr><td style="color:var(--text-secondary);">价值定位</td><td>不仅是培训，更是高端商家圈层——学员之间的经验互鉴和人脉链接本身就是核心价值</td></tr>
-        </table>
-      </div>
-
-      <div style="background:var(--card-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);">
-        <h3 style="font-size:16px;color:var(--primary);margin-bottom:4px;">核心商家大会</h3>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">年度旗舰级活动，公司最高价值的服务产品和成交场域。</p>
-        <table style="width:100%;font-size:13px;line-height:2.2;">
-          <tr><td style="color:var(--text-secondary);width:80px;">目标人群</td><td>新老商家中的高潜力和高价值客户</td></tr>
-          <tr><td style="color:var(--text-secondary);">举办地</td><td>杭州（阿里总部）、海南等具有标杆意义的目的地</td></tr>
-          <tr><td style="color:var(--text-secondary);">规模与时长</td><td>中西部大区约 400 人，4 天 3 夜沉浸式行程</td></tr>
-          <tr><td style="color:var(--text-secondary);">核心目标</td><td><b>大方案攻坚</b>——针对新客户推动大方案签约回款，针对已合作客户推动大方案升级（金品、SKA 等高阶服务包）</td></tr>
-          <tr><td style="color:var(--text-secondary);">差异化优势</td><td>整合阿里官方资源、行业顶级讲师、标杆商家圈层，营造稀缺感和尊享体验；集中式的场景氛围和同行效应，大幅提升大额成交的转化效率</td></tr>
-        </table>
-      </div>
+      <div class="section-title">近期付费活动</div>
+      <div class="card-grid" id="list-paid"></div>
     </div>
+
   </section>
   <section class="page-section" id="page-sop"><div class="placeholder"><div class="icon-large">&#128221;</div><h2>活动邀约SOP</h2><p>标准邀约流程文档，待内容填充</p></div></section>
   <section class="page-section" id="page-scripts"><div class="placeholder"><div class="icon-large">&#128172;</div><h2>邀约话术库</h2><p>不同客户分层的标准邀约话术，待内容填充</p></div></section>
@@ -1165,6 +1153,56 @@ document.getElementById('activity-modal').addEventListener('click', function(e) 
 document.getElementById('add-activity-modal').addEventListener('click', function(e) {
   if (e.target === this) closeAddModal();
 });
+
+// ===== Activity Type Group Mapping =====
+function getTypeGroup(a) {
+  var t = a.title;
+  if (t.indexOf('游学')!==-1 || t.indexOf('橙功营')!==-1 || t.indexOf('核心商家')!==-1) return 'paid';
+  if (t.indexOf('团战')!==-1 || t.indexOf('杭州')!==-1) return 'paid';
+  if (t.indexOf('采购节')!==-1) return 'paid';
+  if (t.indexOf('创业大赛')!==-1) return 'paid';
+  if (t.indexOf('新签沙龙')!==-1 || t.indexOf('AWB')!==-1) return 'newSign';
+  if (t.indexOf('峰会')!==-1 || t.indexOf('达人赛')!==-1 || t.indexOf('大区招商')!==-1) return 'newSign';
+  if (t.indexOf('区域小百大')!==-1 || t.indexOf('启动会')!==-1) return 'newSign';
+  return 'yushang';
+}
+
+// ===== Activity Type Page Navigation =====
+function showTypeDetail(type) {
+  document.getElementById('type-select').style.display = 'none';
+  document.querySelectorAll('.type-detail').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById('type-'+type).classList.add('active');
+  renderTypeActivityList(type);
+}
+
+function showTypeSelect() {
+  document.getElementById('type-select').style.display = 'grid';
+  document.querySelectorAll('.type-detail').forEach(function(el){ el.classList.remove('active'); });
+}
+
+function renderTypeActivityList(type) {
+  var list = activities.filter(function(a){ return getTypeGroup(a) === type; });
+  var container = document.getElementById('list-'+type);
+  if (!container) return;
+  var html = '';
+  if (list.length === 0) {
+    html = '<p style="font-size:13px;color:var(--text-secondary);padding:20px 0;">暂无近期活动</p>';
+  } else {
+    list.forEach(function(a){
+      var isInternal = a.cat === '内部会议';
+      var clickable = !isInternal;
+      var st = STATUS_TAGS[a.status];
+      var catStyle = CATEGORIES[a.cat];
+      html += '<div class="card'+(clickable?' clickable':' no-click')+'"'+(clickable?' onclick="openActivity('+a.id+')"':'')+'>';
+      html += '<span class="tag '+st.cls+'">'+st.label+'</span>';
+      html += '<span class="tag" style="background:'+catStyle.bg+';color:'+catStyle.color+';">'+a.cat+'</span>';
+      html += '<h3>'+escHtml(a.title)+'</h3><p>'+escHtml(a.date)+'</p>';
+      if (a.speaker) html += '<div class="meta"><span>讲师：'+escHtml(a.speaker)+'</span></div>';
+      html += '</div>';
+    });
+  }
+  container.innerHTML = html;
+}
 
 // ===== Init =====
 (function init() {
