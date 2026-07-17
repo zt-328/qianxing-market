@@ -732,30 +732,36 @@ function openActivity(id) {
     html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">编辑活动信息</div>';
 
     html += '<div class="edit-row"><label>活动类别</label>';
-    html += '<select class="cat-select" id="edit-cat-'+a.id+'" onchange="updateCategory('+a.id+', this.value)">';
+    html += '<select class="cat-select" id="edit-cat-'+a.id+'">';
     CAT_KEYS.forEach(function(cat) {
       html += '<option value="'+cat+'"' + (a.cat === cat ? ' selected' : '') + '>'+cat+'</option>';
     });
     html += '</select></div>';
 
     html += '<div class="edit-row"><label>活动状态</label>';
-    html += '<select class="cat-select" id="edit-status-'+a.id+'" onchange="updateField('+a.id+',\'status\',this.value)">';
+    html += '<select class="cat-select" id="edit-status-'+a.id+'">';
     html += '<option value="ongoing"'+(a.status==='ongoing'?' selected':'')+'>进行中</option>';
     html += '<option value="upcoming"'+(a.status==='upcoming'?' selected':'')+'>即将开始</option>';
     html += '<option value="done"'+(a.status==='done'?' selected':'')+'>已完成</option>';
     html += '</select></div>';
 
     html += '<div class="edit-row"><label>活动时间</label>';
-    html += '<input type="text" id="edit-date-'+a.id+'" value="'+escHtml(a.date||'')+'" onchange="updateField('+a.id+',\'date\',this.value)" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>';
+    html += '<input type="text" id="edit-date-'+a.id+'" value="'+escHtml(a.date||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>';
 
     html += '<div class="edit-row"><label>讲师</label>';
-    html += '<input type="text" id="edit-speaker-'+a.id+'" value="'+escHtml(a.speaker||'')+'" placeholder="填写讲师姓名" onchange="updateField('+a.id+',\'speaker\',this.value)" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>';
+    html += '<input type="text" id="edit-speaker-'+a.id+'" value="'+escHtml(a.speaker||'')+'" placeholder="填写讲师姓名" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>';
 
     html += '<div class="edit-row"><label>邀约目标</label>';
-    html += '<input type="text" id="edit-target-'+a.id+'" value="'+escHtml(a.target||'')+'" placeholder="如：邀约50人，到场30人" onchange="updateField('+a.id+',\'target\',this.value)" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>';
+    html += '<input type="text" id="edit-target-'+a.id+'" value="'+escHtml(a.target||'')+'" placeholder="如：邀约50人，到场30人" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>';
 
     html += '<div class="edit-row"><label>活动简介</label>';
-    html += '<input type="text" id="edit-desc-'+a.id+'" value="'+escHtml(a.desc||'')+'" onchange="updateField('+a.id+',\'desc\',this.value)" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>';
+    html += '<input type="text" id="edit-desc-'+a.id+'" value="'+escHtml(a.desc||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>';
+
+    html += '<div style="display:flex;gap:8px;margin-top:12px;">';
+    html += '<button class="btn btn-primary btn-small" onclick="saveActivityEdit('+a.id+')">保存</button>';
+    html += '<button class="btn btn-outline btn-small" onclick="cancelActivityEdit()">取消</button>';
+    html += '<button class="btn btn-outline btn-small" style="margin-left:auto;color:#c04040;border-color:#c04040;" onclick="deleteActivity('+a.id+')">删除活动</button>';
+    html += '</div>';
 
     html += '</div>';
   }
@@ -806,16 +812,29 @@ function closeModal() {
   renderSchedule();
 }
 
-// ===== Admin: Update Category =====
-function updateCategory(id, newCat) {
+// ===== Admin: Save Activity Edit =====
+function saveActivityEdit(id) {
   var a = getActivityById(id);
-  if (a) { a.cat = newCat; saveActivities(activities); }
+  if (!a) return;
+  a.cat     = document.getElementById('edit-cat-'+id).value;
+  a.status  = document.getElementById('edit-status-'+id).value;
+  a.date    = document.getElementById('edit-date-'+id).value.trim();
+  a.speaker = document.getElementById('edit-speaker-'+id).value.trim();
+  a.target  = document.getElementById('edit-target-'+id).value.trim();
+  a.desc    = document.getElementById('edit-desc-'+id).value.trim();
+  saveActivities(activities);
+  closeModal();
 }
 
-// ===== Admin: Update Field (date, speaker, target, desc) =====
-function updateField(id, field, val) {
-  var a = getActivityById(id);
-  if (a) { a[field] = val; saveActivities(activities); }
+function cancelActivityEdit() {
+  closeModal();
+}
+
+function deleteActivity(id) {
+  if (!confirm('确定删除此活动？此操作不可恢复。')) return;
+  activities = activities.filter(function(a) { return a.id !== id; });
+  saveActivities(activities);
+  closeModal();
 }
 
 // ===== Admin: Upload Invitation (file) =====
