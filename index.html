@@ -431,6 +431,13 @@ function renderLoginUI() {
     el.innerHTML = '<button class="login-btn" onclick="openLoginModal()">&#128274; 登录系统</button>';
   }
 }
+
+// ===== Activity Data =====
+function loadActivities() {
+  var stored = localStorage.getItem('qx_activities');
+  if (stored) {
+    try { return JSON.parse(stored); } catch(e) {}
+  }
   var data = DEFAULT_ACTIVITIES.map(function(a) {
     return Object.assign({ invitation: '', desc: '' }, a);
   });
@@ -446,16 +453,6 @@ var activities = loadActivities();
 
 function getActivityById(id) {
   return activities.find(function(a) { return a.id === id; });
-}
-
-// ===== Auth =====
-function isAdmin() {
-  return sessionStorage.getItem('qx_admin') === '1';
-}
-
-function setAdmin(val) {
-  if (val) sessionStorage.setItem('qx_admin', '1');
-  else sessionStorage.removeItem('qx_admin');
 }
 
 // ===== Render Schedule =====
