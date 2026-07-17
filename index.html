@@ -539,6 +539,13 @@ function openActivity(id) {
     });
     html += '</select></div>';
 
+    html += '<div class="edit-row"><label>活动状态</label>';
+    html += '<select class="cat-select" id="edit-status-'+a.id+'" onchange="updateField('+a.id+',\'status\',this.value)">';
+    html += '<option value="ongoing"'+(a.status==='ongoing'?' selected':'')+'>进行中</option>';
+    html += '<option value="upcoming"'+(a.status==='upcoming'?' selected':'')+'>即将开始</option>';
+    html += '<option value="done"'+(a.status==='done'?' selected':'')+'>已完成</option>';
+    html += '</select></div>';
+
     html += '<div class="edit-row"><label>活动时间</label>';
     html += '<input type="text" id="edit-date-'+a.id+'" value="'+escHtml(a.date||'')+'" onchange="updateField('+a.id+',\'date\',this.value)" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>';
 
