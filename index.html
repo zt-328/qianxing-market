@@ -389,6 +389,7 @@
       <div class="edit-row"><label>讲师（选填）</label><input type="text" id="add-speaker" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>
       <div class="edit-row"><label>邀约目标（选填）</label><input type="text" id="add-target" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>
       <div class="edit-row"><label>负责人（选填）</label><input type="text" id="add-contact" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>
+      <div class="edit-row"><label>活动简介（选填）</label><textarea id="add-desc" rows="3" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;resize:vertical;"></textarea></div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;" onclick="doAddActivity()">保存活动</button>
     </div>
   </div>
@@ -692,7 +693,7 @@ function doAddActivity() {
     speaker: document.getElementById('add-speaker').value.trim(),
     target: document.getElementById('add-target').value.trim(),
     contact: document.getElementById('add-contact').value.trim(),
-    invitation: '', invitationType: '', invitationName: '', desc: ''
+    invitation: '', invitationType: '', invitationName: '', desc: document.getElementById('add-desc').value.trim()
   });
   saveActivities(activities);
   closeAddModal();
