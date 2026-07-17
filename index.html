@@ -421,14 +421,20 @@ function doLogout() {
 }
 
 // ===== Login UI =====
-function renderLoginUI() {
+function renderLoginUI(init) {
+  var sidebar = document.getElementById('sidebar');
+  var mobileToggle = document.querySelector('.mobile-toggle');
   var el = document.getElementById('sidebar-login');
   var u = getCurrentUser();
   if (u) {
-    var isAdminUser = u.role === '管理员';
-    el.innerHTML = '<div class="user-info"><span class="role">'+escHtml(u.name)+'</span> · '+escHtml(u.role)+(isAdminUser?' · 管理':'')+'<br><span class="logout-link" onclick="doLogout()">退出登录</span></div>';
+    sidebar.style.display = 'flex';
+    if (mobileToggle) mobileToggle.style.display = '';
+    el.innerHTML = '<div class="user-info"><span class="role">'+escHtml(u.name)+'</span> · '+escHtml(u.role)+'<br><span class="logout-link" onclick="doLogout()">退出登录</span></div>';
   } else {
-    el.innerHTML = '<button class="login-btn" onclick="openLoginModal()">&#128274; 登录系统</button>';
+    sidebar.style.display = 'none';
+    if (mobileToggle) mobileToggle.style.display = 'none';
+    if (!init) openLoginModal();
+    el.innerHTML = '&nbsp;';
   }
 }
 
@@ -782,7 +788,7 @@ document.getElementById('login-modal').addEventListener('click', function(e) {
 });
 
 // ===== Init =====
-renderLoginUI();
+renderLoginUI(true);
 renderSchedule();
 </script>
 
