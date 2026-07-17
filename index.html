@@ -370,6 +370,30 @@
   </div>
 </div>
 
+<!-- Add Activity Modal -->
+<div class="modal-overlay" id="add-activity-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>添加活动</h2>
+      <button class="modal-close" onclick="closeAddModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="edit-row"><label>活动标题</label><input type="text" id="add-title" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>
+      <div class="edit-row"><label>活动类别</label>
+        <select class="cat-select" id="add-cat">'+CAT_KEYS.map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('')+'</select>
+      </div>
+      <div class="edit-row"><label>活动状态</label>
+        <select class="cat-select" id="add-status"><option value="upcoming">即将开始</option><option value="ongoing">进行中</option><option value="done">已完成</option></select>
+      </div>
+      <div class="edit-row"><label>活动时间</label><input type="text" id="add-date" placeholder="如：7月20日 或 7月20日 - 22日" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>
+      <div class="edit-row"><label>讲师（选填）</label><input type="text" id="add-speaker" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>
+      <div class="edit-row"><label>邀约目标（选填）</label><input type="text" id="add-target" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>
+      <div class="edit-row"><label>负责人（选填）</label><input type="text" id="add-contact" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;" onclick="doAddActivity()">保存活动</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===== Config =====
 const CATEGORIES = {
@@ -575,6 +599,9 @@ function renderSchedule() {
   months.forEach(function(m) {
     html += '<button class="cal-month-btn'+(calendarMonth===m?' active':'')+'" onclick="switchMonth('+m+')">'+m+'月</button>';
   });
+  if (isAdmin()) {
+    html += '<button class="btn btn-primary btn-small" style="margin-left:auto;" onclick="openAddActivity()">+ 添加活动</button>';
+  }
   html += '</div>';
 
   // Day headers
@@ -632,6 +659,43 @@ function renderSchedule() {
 
 function switchMonth(m) {
   calendarMonth = m;
+  renderSchedule();
+}
+
+// ===== Add Activity =====
+function openAddActivity() {
+  document.getElementById('add-activity-modal').classList.add('open');
+  document.getElementById('add-title').value = '';
+  document.getElementById('add-date').value = calendarMonth+'月';
+  setTimeout(function(){ document.getElementById('add-title').focus(); }, 100);
+}
+
+function closeAddModal() {
+  document.getElementById('add-activity-modal').classList.remove('open');
+}
+
+function doAddActivity() {
+  var title = document.getElementById('add-title').value.trim();
+  var cat = document.getElementById('add-cat').value;
+  var status = document.getElementById('add-status').value;
+  var date = document.getElementById('add-date').value.trim();
+  if (!title) { alert('请输入活动标题'); return; }
+  if (!date) { alert('请输入活动时间'); return; }
+  var maxId = 0;
+  activities.forEach(function(a) { if (a.id > maxId) maxId = a.id; });
+  activities.push({
+    id: maxId + 1,
+    title: title,
+    cat: cat,
+    status: status,
+    date: date,
+    speaker: document.getElementById('add-speaker').value.trim(),
+    target: document.getElementById('add-target').value.trim(),
+    contact: document.getElementById('add-contact').value.trim(),
+    invitation: '', invitationType: '', invitationName: '', desc: ''
+  });
+  saveActivities(activities);
+  closeAddModal();
   renderSchedule();
 }
 
@@ -814,6 +878,9 @@ function closeSidebar() {
 // ===== Modal click-outside-to-close =====
 document.getElementById('activity-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
+});
+document.getElementById('add-activity-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddModal();
 });
 
 // ===== Init =====
