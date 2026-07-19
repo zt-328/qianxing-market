@@ -257,13 +257,19 @@ closeSidebar();
 }
 
 // ===== ACTIVITIES =====
-var DB_VER=1;
+var DEFAULT_ACTS = [
+  {id:1,title:'AccioWork 成交营 — 企业版交付课程',cat:'育商活动',status:'upcoming',date:'7月28日',speaker:'张国儒',target:'全天课程，含实战演练，请携带电脑',contact:'前星科技',desc:'AI重塑全球商业。四大核心模块：组织提效（Agent框架搭建）、业务提效（智能询盘跟进）、运营提效（Listing优化与数据监控）、智能体落地（技能配置与实战演练）。参训后可获独家AI智能体框架设计方案。地点：云朵X酒店5楼（西安经开行政中心店）'},
+  {id:2,title:'秦商出海 货通全球 — 传统汽配门店转型外贸破局之路',cat:'新签活动',status:'upcoming',date:'7月22日',speaker:'雷林桥、董越',target:'面向内贸老板、工厂老板、个人商家',contact:'董越',desc:'博雯鸿运总经理雷林桥分享从内贸汽配门店到年销1400万的外贸转型经历。阿里跨境服务中心团队主管董越讲解热门行业数据及本地化服务体系。地点：西安市未央区文景路220号一方中港国际A座1505。14:00开始'},
+  {id:3,title:'渝见标杆 跨境同行 — 走进重庆外贸标杆商家（三天两夜）',cat:'付费活动',status:'upcoming',date:'7月29日 - 31日',speaker:'杨蒙、钱山会、姚江、苏先顺、姚坤',target:'仅20席，限企业负责人，早鸟价899元',contact:'杨蒙',desc:'三天两夜重庆深度游学：Day1签到破冰&欢迎晚宴；Day2参访壬辰星途科技&全汇科技，数字机遇分享夜；Day3家科科技分享&闭幕。费用含当地交通、餐饮、讲师费。推荐高铁G1979（西安→重庆12:07-17:19）'}
+];
+var DB_VER=2;
 function loadActs(){
 if(localStorage.getItem('qx_ver')!=DB_VER){localStorage.removeItem('qx_acts');localStorage.setItem('qx_ver',DB_VER)}
 var s=localStorage.getItem('qx_acts');
 if(s){try{console.log('Loaded',JSON.parse(s).length,'activities');return JSON.parse(s)}catch(e){console.error(e)}}
-console.log('No stored activities');
-return [];
+console.log('Seeded',DEFAULT_ACTS.length,'activities');
+saveActs();
+return DEFAULT_ACTS.map(function(a){return Object.assign({invite:'',inviteType:'',inviteName:''},a)});
 }
 activities=loadActs();
 function saveActs(){localStorage.setItem('qx_acts',JSON.stringify(activities));console.log('Saved',activities.length,'activities')}
