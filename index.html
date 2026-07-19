@@ -700,7 +700,8 @@ function parseActivityDates(a) {
 
 function renderSchedule() {
   var container = document.getElementById('page-schedule');
-  var html = '';
+  if (!container) { console.error('page-schedule not found!'); return; }
+  var html = '<p style=\"color:red;font-size:20px;\">DEBUG: renderSchedule called, container found</p>';
 
   // Count stats
   var ongoing = 0, upcoming = 0, done = 0;
