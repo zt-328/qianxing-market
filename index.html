@@ -641,7 +641,13 @@ function renderLoginUI() {
 }
 
 // ===== Activity Data =====
+var DATA_VERSION = 2;
 function loadActivities() {
+  var ver = localStorage.getItem('qx_ver');
+  if (ver != DATA_VERSION) {
+    localStorage.removeItem('qx_activities');
+    localStorage.setItem('qx_ver', DATA_VERSION);
+  }
   var stored = localStorage.getItem('qx_activities');
   if (stored) {
     try { return JSON.parse(stored); } catch(e) {}
