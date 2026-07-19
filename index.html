@@ -644,15 +644,7 @@ function renderLoginUI() {
 function loadActivities() {
   var stored = localStorage.getItem('qx_activities');
   if (stored) {
-    try {
-      var data = JSON.parse(stored);
-      // Clear old default data if cached
-      if (data.length > 0 && DEFAULT_ACTIVITIES.length === 0 && data.length <= 50) {
-        var isDefault = data.some(function(a){ return a.title === '公司游学（重庆）' || a.title === '跨境三单俱乐部'; });
-        if (isDefault) { localStorage.removeItem('qx_activities'); return []; }
-      }
-      return data;
-    } catch(e) {}
+    try { return JSON.parse(stored); } catch(e) {}
   }
   var data = DEFAULT_ACTIVITIES.map(function(a) {
     return Object.assign({ invitation: '', desc: '' }, a);
@@ -672,7 +664,9 @@ function getActivityById(id) {
 }
 
 // ===== Default activities (fallback seed data) =====
-var DEFAULT_ACTIVITIES = [];
+var DEFAULT_ACTIVITIES = [
+  { id: 1, title: '示例活动（可删除）', cat: '营销活动', date: '7月18日', status: 'upcoming' }
+];
 
 // ===== Calendar Helpers =====
 var calendarMonth = 7; // default July
