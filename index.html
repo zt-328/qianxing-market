@@ -217,6 +217,7 @@ function parseDateForStatus(d){
 }
 
 var calendarMonth = 7;
+var scheduleView = 'calendar'; // 'calendar' or 'inviting'
 
 // NAV items
 var NAV_ITEMS = [
@@ -268,7 +269,7 @@ document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('a
 if(el)el.classList.add('active');
 document.querySelectorAll('.page-section').forEach(function(s){s.classList.remove('active')});
 var t=byId('page-'+id);if(t)t.classList.add('active');
-if(id==='schedule')renderSchedule();
+if(id==='schedule'){scheduleView='calendar';renderSchedule();}
 if(id==='activity-types')renderTypePage();
 closeSidebar();
 }
@@ -325,12 +326,26 @@ return r;
 
 function renderSchedule(){
 var c=byId('page-schedule'),h='';
-var inviting=0,upcoming=0,done=0;
-activities.forEach(function(a){var s=getDisplayStatus(a);if(s==='inviting')inviting++;else if(s==='upcoming')upcoming++;else if(s==='done')done++;});
+var inviting=0,upcoming=0,done=0,invitingList=[];
+activities.forEach(function(a){var s=getDisplayStatus(a);if(s==='inviting'){inviting++;invitingList.push(a)}else if(s==='upcoming')upcoming++;else if(s==='done')done++;});
 
 var u=getU();
 h+='<h1 class="page-title">活动排期</h1><p class="page-desc">Q3 活动日历 · 当前：'+e(u.name);if(isAdmin())h+=' <span class="admin-indicator">管理员模式</span>';h+='</p>';
-h+='<div class="status-bar"><div class="status-card ongoing"><div class="label">正在进行 / 邀约中</div><div class="value">'+inviting+'</div></div><div class="status-card upcoming"><div class="label">即将开始</div><div class="value">'+upcoming+'</div></div><div class="status-card completed"><div class="label">已完成</div><div class="value">'+done+'</div></div></div>';
+h+='<div class="status-bar"><div class="status-card ongoing" style="cursor:pointer" onclick="scheduleView=\'inviting\';renderSchedule()"><div class="label">正在进行 / 邀约中</div><div class="value">'+inviting+'</div></div><div class="status-card upcoming"><div class="label">即将开始</div><div class="value">'+upcoming+'</div></div><div class="status-card completed"><div class="label">已完成</div><div class="value">'+done+'</div></div></div>';
+
+if(scheduleView==='inviting'){
+h+='<div class="back-btn" onclick="scheduleView=\'calendar\';renderSchedule()">&larr; 返回活动日历</div>';
+h+='<div class="section-title">正在邀约中（共 '+inviting+' 场）</div>';
+if(invitingList.length===0)h+='<p style="font-size:13px;color:var(--text-secondary)">暂无正在邀约中的活动</p>';
+else{h+='<div class="card-grid">';
+invitingList.forEach(function(a){
+var isInt=a.cat==='内部会议',cl=!isInt,cs=CATS[a.cat];
+h+='<div class="card'+(cl?' clickable':'')+'"'+(cl?' onclick="openAct('+a.id+')"':'')+'><span class="tag tag-active">正在邀约中</span><span class="tag" style="background:'+cs.bg+';color:'+cs.c+'">'+a.cat+'</span><h3>'+e(a.title)+'</h3><p>'+e(a.date)+'</p>';if(a.speaker)h+='<div class="meta"><span>讲师：'+e(a.speaker)+'</span></div>';h+='</div>';
+});
+h+='</div>';}
+c.innerHTML=h;return;
+}
+scheduleView='calendar';
 h+='<div style="display:flex;gap:16px;margin-bottom:16px;font-size:13px;color:var(--text-secondary);flex-wrap:wrap">';
 CAT_KEYS.forEach(function(cat){var x=CATS[cat];h+='<span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:'+x.c+'"></span> '+cat+'</span>'});
 h+='</div>';
