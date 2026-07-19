@@ -257,14 +257,16 @@ closeSidebar();
 }
 
 // ===== ACTIVITIES =====
-var activities=[];
+var DB_VER=1;
 function loadActs(){
+if(localStorage.getItem('qx_ver')!=DB_VER){localStorage.removeItem('qx_acts');localStorage.setItem('qx_ver',DB_VER)}
 var s=localStorage.getItem('qx_acts');
-if(s){try{return JSON.parse(s)}catch(e){}}
+if(s){try{console.log('Loaded',JSON.parse(s).length,'activities');return JSON.parse(s)}catch(e){console.error(e)}}
+console.log('No stored activities');
 return [];
 }
 activities=loadActs();
-function saveActs(){localStorage.setItem('qx_acts',JSON.stringify(activities))}
+function saveActs(){localStorage.setItem('qx_acts',JSON.stringify(activities));console.log('Saved',activities.length,'activities')}
 function getAct(id){return activities.find(function(a){return a.id===id})}
 
 // ===== CALENDAR =====
