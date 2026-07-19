@@ -138,8 +138,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <div class="login-card">
 <div class="login-logo">陕西前星科技</div>
 <div class="login-sub">市场活动中心</div>
-<input type="text" id="login-name" placeholder="请输入姓名" autocomplete="off">
-<input type="password" id="login-pwd" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+<input type="text" id="login-name" placeholder="请输入姓名" autocomplete="off" name="uname">
+<input type="password" id="login-pwd" placeholder="请输入密码" autocomplete="new-password" name="upwd" onkeydown="if(event.key==='Enter')doLogin()">
 <p class="login-err" id="login-err"></p>
 <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;font-size:15px" onclick="doLogin()">登 录</button>
 </div>
@@ -197,7 +197,24 @@ var USERS = [
 
 var CATS = { '新签活动': {bg:'#EDF2E8',c:'#5B9E6F'}, '育商活动': {bg:'#FFF5E8',c:'#E8A838'}, '付费活动': {bg:'#EAF0F8',c:'#4877B5'}, '内部会议': {bg:'#FFFDE8',c:'#B8A020'} };
 var CAT_KEYS = Object.keys(CATS);
-var ST = { ongoing:{cls:'tag-active',l:'进行中'}, upcoming:{cls:'tag-upcoming',l:'即将开始'}, done:{cls:'tag-done',l:'已完成'} };
+var ST = { ongoing:{cls:'tag-active',l:'进行中'}, upcoming:{cls:'tag-upcoming',l:'即将开始'}, inviting:{cls:'tag-active',l:'正在邀约中'}, done:{cls:'tag-done',l:'已完成'} };
+
+function getDisplayStatus(a){
+  var parsed = parseDateForStatus(a.date);
+  if(!parsed) return a.status;
+  var now = new Date(); now.setHours(0,0,0,0);
+  var d = new Date(2026, parsed.m-1, parsed.d);
+  d.setHours(0,0,0,0);
+  if(d < now) return 'done';
+  var weekFromNow = new Date(now); weekFromNow.setDate(weekFromNow.getDate()+7);
+  if(d <= weekFromNow) return 'inviting';
+  return 'upcoming';
+}
+
+function parseDateForStatus(d){
+  var s=d.match(/^(\d+)月(\d+)日/); if(s) return {m:parseInt(s[1]),d:parseInt(s[2])};
+  return null;
+}
 
 var calendarMonth = 7;
 
@@ -308,12 +325,12 @@ return r;
 
 function renderSchedule(){
 var c=byId('page-schedule'),h='';
-var ongoing=0,upcoming=0,done=0;
-activities.forEach(function(a){if(a.status==='ongoing')ongoing++;else if(a.status==='upcoming')upcoming++;else if(a.status==='done')done++;});
+var inviting=0,upcoming=0,done=0;
+activities.forEach(function(a){var s=getDisplayStatus(a);if(s==='inviting')inviting++;else if(s==='upcoming')upcoming++;else if(s==='done')done++;});
 
 var u=getU();
 h+='<h1 class="page-title">活动排期</h1><p class="page-desc">Q3 活动日历 · 当前：'+e(u.name);if(isAdmin())h+=' <span class="admin-indicator">管理员模式</span>';h+='</p>';
-h+='<div class="status-bar"><div class="status-card"><div class="label">进行中</div><div class="value">'+ongoing+'</div></div><div class="status-card upcoming"><div class="label">即将开始</div><div class="value">'+upcoming+'</div></div><div class="status-card completed"><div class="label">已完成</div><div class="value">'+done+'</div></div></div>';
+h+='<div class="status-bar"><div class="status-card ongoing"><div class="label">正在进行 / 邀约中</div><div class="value">'+inviting+'</div></div><div class="status-card upcoming"><div class="label">即将开始</div><div class="value">'+upcoming+'</div></div><div class="status-card completed"><div class="label">已完成</div><div class="value">'+done+'</div></div></div>';
 h+='<div style="display:flex;gap:16px;margin-bottom:16px;font-size:13px;color:var(--text-secondary);flex-wrap:wrap">';
 CAT_KEYS.forEach(function(cat){var x=CATS[cat];h+='<span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:'+x.c+'"></span> '+cat+'</span>'});
 h+='</div>';
@@ -335,8 +352,8 @@ for(var d=1;d<=dim;d++){
 h+='<div class="cal-day"><div class="day-num">'+d+'</div>';
 var evs=dm[d]||[],sc=Math.min(evs.length,3);
 for(var j=0;j<sc;j++){
-var ev=evs[j],cs=CATS[ev.cat],isInt=ev.cat==='内部会议';
-h+='<span class="cal-event'+(isInt?' no-click':'')+'" style="background:'+cs.bg+';color:'+cs.c+';border-left:3px solid '+cs.c+'" title="'+e(ev.title)+'" onclick="'+(isInt?'':'openAct('+ev.id+')')+'">'+e(ev.title)+'</span>';
+var ev=evs[j],cs=CATS[ev.cat],isInt=ev.cat==='内部会议',ds=getDisplayStatus(ev);
+h+='<span class="cal-event'+(isInt?' no-click':'')+'" style="background:'+cs.bg+';color:'+cs.c+';border-left:3px solid '+cs.c+'" title="'+e(ev.title)+' ['+ST[ds].l+']" onclick="'+(isInt?'':'openAct('+ev.id+')')+'">'+e(ev.title)+'</span>';
 }
 if(evs.length>3)h+='<span class="cal-more">+'+ (evs.length-3) +' 更多</span>';
 h+='</div>';
@@ -371,7 +388,7 @@ saveActs();closeAddModal();setTimeout(function(){renderSchedule()},100);
 function openAct(id){
 var a=getAct(id);if(!a)return;
 byId('modal-title').textContent=a.title;
-var h='',cs=CATS[a.cat],st=ST[a.status];
+var h='',cs=CATS[a.cat],ds=getDisplayStatus(a),st=ST[ds];
 h+='<span class="tag '+st.cls+'" style="margin-bottom:4px">'+st.l+'</span><span class="tag" style="background:'+cs.bg+';color:'+cs.c+'">'+a.cat+'</span>';
 h+='<div class="info-row" style="margin-top:16px"><span class="info-label">时间</span><span class="info-value">'+e(a.date)+'</span></div>';
 if(a.speaker)h+='<div class="info-row"><span class="info-label">讲师</span><span class="info-value">'+e(a.speaker)+'</span></div>';
@@ -465,7 +482,7 @@ function renderTList(type){
 var list=activities.filter(function(a){return getTG(a)===type}),c=byId('list-'+type);if(!c)return;
 var h='';
 if(list.length===0){h='<p style="font-size:13px;color:var(--text-secondary);padding:20px 0">暂无近期活动</p>'}
-else list.forEach(function(a){var isInt=a.cat==='内部会议',cl=a.cat!=='内部会议',cs=CATS[a.cat],st=ST[a.status];h+='<div class="card'+(cl?' clickable':'')+'"'+(cl?' onclick="openAct('+a.id+')"':'')+'><span class="tag '+st.cls+'">'+st.l+'</span><span class="tag" style="background:'+cs.bg+';color:'+cs.c+'">'+a.cat+'</span><h3>'+e(a.title)+'</h3><p>'+e(a.date)+'</p></div>'});
+else list.forEach(function(a){var isInt=a.cat==='内部会议',cl=a.cat!=='内部会议',cs=CATS[a.cat],ds=getDisplayStatus(a),st=ST[ds];h+='<div class="card'+(cl?' clickable':'')+'"'+(cl?' onclick="openAct('+a.id+')"':'')+'><span class="tag '+st.cls+'">'+st.l+'</span><span class="tag" style="background:'+cs.bg+';color:'+cs.c+'">'+a.cat+'</span><h3>'+e(a.title)+'</h3><p>'+e(a.date)+'</p></div>'});
 c.innerHTML=h;
 }
 
