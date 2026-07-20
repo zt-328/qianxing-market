@@ -757,8 +757,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 
 <!-- Top: Latest Activity -->
 <div class="db-alert" style="padding:24px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
 <h3 style="font-size:16px;margin-bottom:6px">&#128197; 7月22日 秦商出海沙龙</h3>
-<p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">数据截至 7月20日 15:39，持续更新中</p>
+<div style="display:flex;gap:8px;align-items:center"><span style="font-size:12px;color:var(--text-secondary)">数据截至：<span id="reg-updated"></span></span><input type="file" id="reg-file" accept=".xlsx,.xls" onchange="handleRegUpload(this)" style="display:none"><button class="btn btn-primary btn-small" onclick="byId('reg-file').click()">&#128229; 上传报名Excel</button></div>
+</div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
 <span style="font-size:36px;font-weight:800;color:var(--primary)">12</span><span style="font-size:14px;color:var(--text-secondary)">人已报名</span>
 </div>
@@ -901,6 +903,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 // ===== DATA =====
 var USERS = [
@@ -1448,6 +1451,72 @@ function closeSidebar(){byId('sidebar').classList.remove('open');byId('overlay')
 function switchSTab(t){document.querySelectorAll('#script-tabs .tab-btn2,#page-scripts .tab-btn2').forEach(function(b){b.classList.remove('active')});var btns=document.querySelectorAll('#page-scripts .tab-btn2');btns.forEach(function(b){if(b.textContent.indexOf(t==='newsign'?'新签':t==='yushang'?'育商':'付费')!==-1)b.classList.add('active')});document.querySelectorAll('.ss-section').forEach(function(s){s.classList.remove('active')});var el=byId('ss-'+t);if(el)el.classList.add('active')}
 
 function switchDboard(id){document.querySelectorAll('.db-tab').forEach(function(t){t.classList.remove('active')});event.target.classList.add('active');document.querySelectorAll('.db-panel').forEach(function(p){p.classList.remove('active')});byId('db-'+id).classList.add('active')}
+
+// ===== REGISTRATION DATA =====
+var regData = [];
+var REG_URL = 'https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/registration.json';
+
+function loadRegData(cb){
+  fetch(REG_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){regData=d;cb()}).catch(function(){regData=[];cb()});
+}
+
+function saveRegData(){
+  var token=getGistToken();if(!token)return;
+  fetch('https://api.github.com/gists/'+GIST_ID,{
+    method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({files:{'registration.json':{content:JSON.stringify(regData)}}})
+  }).catch(function(){});
+}
+
+function handleRegUpload(input){
+  var file=input.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var wb=XLSX.read(e.target.result,{type:'array'});
+    var sheet=wb.Sheets[wb.SheetNames[0]];
+    var rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+    if(rows.length<2){alert('表格为空');return}
+    var hdr=rows[0];var idxName=hdr.indexOf('邀约销售名称'),idxTeam=hdr.indexOf('邀约销售所属主管组');
+    if(idxName<0||idxTeam<0){alert('未找到"邀约销售名称"或"邀约销售所属主管组"列');return}
+    regData=[];
+    for(var i=1;i<rows.length;i++){
+      var r=rows[i];if(!r[idxName])continue;
+      regData.push({name:r[idxName],team:r[idxTeam]||'未分组'});
+    }
+    var d=new Date();byId('reg-updated').textContent=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2);
+    saveRegData();renderRegTop();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderRegTop(){
+  if(!regData.length)return;
+  var total=regData.length;
+  var teams={};
+  regData.forEach(function(r){
+    if(!teams[r.team])teams[r.team]={};
+    if(!teams[r.team][r.name])teams[r.team][r.name]=0;
+    teams[r.team][r.name]++;
+  });
+  var html='';
+  html+='<div style="display:flex;align-items:center;gap:12px;margin:16px 0 20px"><span style="font-size:36px;font-weight:800;color:var(--primary)">'+total+'</span><span style="font-size:14px;color:var(--text-secondary)">人已报名</span></div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">';
+  var colors=['var(--primary)','#E8A838','#3D6F94','#5B9E6F','#836687'];
+  var ci=0;
+  for(var t in teams){
+    var sum=0;for(var n in teams[t])sum+=teams[t][n];
+    html+='<div style="background:var(--card-bg);border-radius:8px;padding:14px;border:1px solid var(--border)">';
+    html+='<h4 style="font-size:13px;color:'+colors[ci%colors.length]+';margin-bottom:8px">'+t+' <span style="font-size:18px;font-weight:700">'+sum+'</span> 人</h4>';
+    html+='<div style="font-size:11px;line-height:2;color:var(--text)">';
+    for(var n in teams[t]){
+      html+='<span style="display:inline-block;margin:1px 4px 1px 0;padding:1px 7px;background:var(--bg);border-radius:4px">'+n+' <strong style="color:var(--primary)">'+teams[t][n]+'</strong></span>';
+    }
+    html+='</div></div>';
+    ci++;
+  }
+  html+='</div>';
+  document.querySelector('#page-dashboard .db-alert').innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px"><h3 style="font-size:16px;margin-bottom:6px">&#128197; 7月22日 秦商出海沙龙</h3><div style="display:flex;gap:8px;align-items:center"><span style="font-size:12px;color:var(--text-secondary)">数据截至：<span id="reg-updated-text">'+byId('reg-updated').textContent+'</span></span><input type="file" id="reg-file" accept=".xlsx,.xls" onchange="handleRegUpload(this)" style="display:none"><button class="btn btn-primary btn-small" onclick="byId(\'reg-file\').click()">&#128229; 上传报名Excel</button></div></div>'+html;
+}
 
 // ===== INIT =====
 (function init(){
