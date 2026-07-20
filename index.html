@@ -416,19 +416,32 @@ var DEFAULT_ACTS = [
   {id:25,title:'核心商家季度交流会',cat:'育商活动',status:'upcoming',date:'9月17日'},
   {id:26,title:'本地游学',cat:'新签活动',status:'upcoming',date:'9月23日'}
 ];
-var DB_VER=4;
+var GIST_ID = '42df42de5e3fdd6deca7d592d452290a';
+var GIST_URL = 'https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/activities.json';
+
+function getGistToken(){
+  return localStorage.getItem('gist_token') || '';
+}
+
 function loadActs(cb){
-  // Try server data first (shared source of truth)
-  fetch('data.json?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
-    activities = data; saveActs(); cb();
+  fetch(GIST_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
+    activities = data; localStorage.setItem('qx_acts',JSON.stringify(data)); cb();
   }).catch(function(){
-    // Fallback to localStorage if offline
     var s=localStorage.getItem('qx_acts');
     if(s){try{activities=JSON.parse(s)}catch(e){}}
     cb();
   });
 }
-function saveActs(){localStorage.setItem('qx_acts',JSON.stringify(activities))}
+function saveActs(){
+  localStorage.setItem('qx_acts',JSON.stringify(activities));
+  // Sync to cloud
+  var token = getGistToken();
+  if(!token) return;
+  fetch('https://api.github.com/gists/'+GIST_ID,{
+    method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({files:{'activities.json':{content:JSON.stringify(activities)}}})
+  }).catch(function(){console.log('Sync failed, saved locally')});
+}
 function getAct(id){return activities.find(function(a){return a.id===id})}
 
 // ===== CALENDAR =====
@@ -628,9 +641,14 @@ function switchSTab(t){document.querySelectorAll('#script-tabs .tab-btn2,#page-s
 // ===== INIT =====
 (function init(){
 var u=getU();
-if(u){byId('login-page').style.display='none';byId('app-container').classList.add('active');buildNav();renderLoginUI();loadActs(function(){renderSchedule()})}
+if(u){byId('login-page').style.display='none';byId('app-container').classList.add('active');buildNav();renderLoginUI();loadActs(function(){renderSchedule();if(isAdmin()&&!getGistToken())promptToken()})}
 else{byId('login-page').style.display='flex'}
 })();
+
+function promptToken(){
+  var t=prompt('输入 GitHub Token 以启用云端同步（仅管理员需设置一次）：\n\n如暂无 Token，回复"跳过"',getGistToken()||'');
+  if(t&&t!=='跳过'){localStorage.setItem('gist_token',t);alert('云端同步已启用！')}
+}
 
 // Modal click-outside
 byId('detail-modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
