@@ -887,6 +887,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <input type="text" id="fu-search" placeholder="搜索公司名称..." style="flex:1;min-width:200px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" oninput="renderFollowup()">
 <input type="file" id="fu-file" accept=".xlsx,.xls" onchange="handleFuUpload(this)" style="display:none">
 <button class="btn btn-primary btn-small" onclick="byId('fu-file').click()">&#128229; 导入Excel</button>
+<button class="btn btn-outline btn-small" onclick="downloadFuExcel()">&#128228; 导出Excel</button>
 </div>
 <div class="card-grid" id="fu-list"></div>
 <div style="text-align:center;margin-top:16px" id="fu-more"></div>
@@ -1406,6 +1407,18 @@ function renderFuMore(){
   var remaining=total-fuPage-50;
   if(remaining>0)byId('fu-more').innerHTML='<button class="btn btn-outline btn-small" onclick="fuPage+=50;renderFuMore()">加载更多 ('+Math.min(50,remaining)+' 条)</button>';
   else byId('fu-more').innerHTML='';
+}
+
+function downloadFuExcel(){
+  var filtered=fuSearch?customers.filter(function(c){return c.company.toLowerCase().indexOf(fuSearch)!==-1}):customers;
+  var rows=[['公司名称','联系人','销售','参加次数','季度','最近活动']];
+  filtered.forEach(function(c){
+    rows.push([c.company,c.contacts.join('、'),c.sales.join('、'),c.total,c.periods?c.periods.join(' '):'',c.activities.length?c.activities[c.activities.length-1].date+' '+c.activities[c.activities.length-1].activity:'']);
+  });
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:30},{wch:25},{wch:20},{wch:8},{wch:20},{wch:35}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'客户名单');
+  XLSX.writeFile(wb,'客户跟进名单.xlsx');
 }
 
 function openFuDetail(company){
