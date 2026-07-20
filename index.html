@@ -1327,11 +1327,16 @@ var customers=[],fuPage=0,fuSearch='';
 var CUST_URL='https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/customers.json';
 
 function loadCustomers(cb){
-  fetch(CUST_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){customers=d;cb()}).catch(function(){customers=[];cb()});
+  var s=localStorage.getItem('qx_customers');if(s){try{customers=JSON.parse(s)}catch(e){}}
+  cb();
+  fetch(CUST_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){
+    if(JSON.stringify(d)!==JSON.stringify(customers)){customers=d;localStorage.setItem('qx_customers',JSON.stringify(d));renderFollowup()}
+  }).catch(function(){});
 }
 
 function saveCustomers(){
-  var token=getGistToken();if(!token){alert('未配置同步Token，请先输入Token启用云端同步');return}
+  localStorage.setItem('qx_customers',JSON.stringify(customers));
+  var token=getGistToken();if(!token){alert('未配置同步Token');return}
   fetch('https://api.github.com/gists/'+GIST_ID,{
     method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
     body:JSON.stringify({files:{'customers.json':{content:JSON.stringify(customers)}}})
