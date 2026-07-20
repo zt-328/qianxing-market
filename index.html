@@ -987,6 +987,7 @@ var t=byId('page-'+id);if(t)t.classList.add('active');
 if(id==='schedule'){scheduleView='calendar';renderSchedule();}
 if(id==='cases'){loadCases(function(){initCaseFilters();renderCases()})}
 if(id==='speakers'){loadSpeakers(function(){initSpeakerFilters();renderSpeakers()})}
+if(id==='dashboard'){loadRegData(function(){byId('reg-updated').textContent='云端数据';renderRegTop()})}
 if(id==='activity-types')renderTypePage();
 closeSidebar();
 }
