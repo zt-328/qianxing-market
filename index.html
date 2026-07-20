@@ -995,6 +995,7 @@ document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('a
 if(el)el.classList.add('active');
 document.querySelectorAll('.page-section').forEach(function(s){s.classList.remove('active')});
 var t=byId('page-'+id);if(t)t.classList.add('active');
+sessionStorage.setItem('qx_lastPage',id);
 if(id==='schedule'){scheduleView='calendar';renderSchedule();}
 if(id==='cases'){loadCases(function(){initCaseFilters();renderCases()})}
 if(id==='speakers'){loadSpeakers(function(){initSpeakerFilters();renderSpeakers()})}
@@ -1633,7 +1634,17 @@ function renderRegTop(){
 // ===== INIT =====
 (function init(){
 var u=getU();
-if(u){byId('login-page').style.display='none';byId('app-container').classList.add('active');buildNav();renderLoginUI();loadActs(function(){renderSchedule();if(isAdmin()&&!getGistToken())promptToken()})}
+if(u){byId('login-page').style.display='none';byId('app-container').classList.add('active');buildNav();renderLoginUI();
+  // Preload activities before navigating to last page
+  loadActs(function(){
+    var lastPage=sessionStorage.getItem('qx_lastPage');
+    if(lastPage&&lastPage!=='schedule'&&byId('page-'+lastPage)){
+      switchPage(lastPage,document.querySelector('.nav-item[data-page=\"'+lastPage+'\"]'));
+    } else {
+      renderSchedule();
+    }
+    if(isAdmin()&&!getGistToken())promptToken();
+  });}
 else{byId('login-page').style.display='flex'}
 })();
 
