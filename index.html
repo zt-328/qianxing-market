@@ -417,16 +417,18 @@ var DEFAULT_ACTS = [
   {id:26,title:'本地游学',cat:'新签活动',status:'upcoming',date:'9月23日'}
 ];
 var DB_VER=4;
-function loadActs(){
-if(localStorage.getItem('qx_ver')!=DB_VER){localStorage.removeItem('qx_acts');localStorage.setItem('qx_ver',DB_VER)}
-var s=localStorage.getItem('qx_acts');
-if(s){try{return JSON.parse(s)}catch(e){}}
-var data=DEFAULT_ACTS.map(function(a){return Object.assign({invite:'',inviteType:'',inviteName:''},a)});
-localStorage.setItem('qx_acts',JSON.stringify(data));
-return data;
+function loadActs(cb){
+  // Try server data first (shared source of truth)
+  fetch('data.json?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
+    activities = data; saveActs(); cb();
+  }).catch(function(){
+    // Fallback to localStorage if offline
+    var s=localStorage.getItem('qx_acts');
+    if(s){try{activities=JSON.parse(s)}catch(e){}}
+    cb();
+  });
 }
-activities=loadActs();
-function saveActs(){localStorage.setItem('qx_acts',JSON.stringify(activities));console.log('Saved',activities.length,'activities')}
+function saveActs(){localStorage.setItem('qx_acts',JSON.stringify(activities))}
 function getAct(id){return activities.find(function(a){return a.id===id})}
 
 // ===== CALENDAR =====
@@ -626,7 +628,8 @@ function switchSTab(t){document.querySelectorAll('#script-tabs .tab-btn2,#page-s
 // ===== INIT =====
 (function init(){
 var u=getU();
-if(u){byId('login-page').style.display='none';byId('app-container').classList.add('active');buildNav();renderLoginUI();renderSchedule()}else{byId('login-page').style.display='flex'}
+if(u){byId('login-page').style.display='none';byId('app-container').classList.add('active');buildNav();renderLoginUI();loadActs(function(){renderSchedule()})}
+else{byId('login-page').style.display='flex'}
 })();
 
 // Modal click-outside
