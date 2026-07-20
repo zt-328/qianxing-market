@@ -1331,11 +1331,11 @@ function loadCustomers(cb){
 }
 
 function saveCustomers(){
-  var token=getGistToken();if(!token)return;
+  var token=getGistToken();if(!token){alert('未配置同步Token，请先输入Token启用云端同步');return}
   fetch('https://api.github.com/gists/'+GIST_ID,{
     method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
     body:JSON.stringify({files:{'customers.json':{content:JSON.stringify(customers)}}})
-  }).catch(function(){});
+  }).then(function(r){return r.json()}).then(function(d){console.log('Customers synced:',d.html_url)}).catch(function(e){alert('云端保存失败，数据仅保存在本地。请检查网络后重试')});
 }
 
 function handleFuUpload(input){
