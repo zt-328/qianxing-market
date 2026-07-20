@@ -1592,19 +1592,22 @@ function switchSTab(t){document.querySelectorAll('#script-tabs .tab-btn2,#page-s
 function switchDboard(id){document.querySelectorAll('.db-tab').forEach(function(t){t.classList.remove('active')});event.target.classList.add('active');document.querySelectorAll('.db-panel').forEach(function(p){p.classList.remove('active')});byId('db-'+id).classList.add('active')}
 
 // ===== REGISTRATION DATA =====
-var regData = [];
 var REG_URL = 'https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/registration.json';
-
 function loadRegData(cb){
-  fetch(REG_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){regData=d;cb()}).catch(function(){regData=[];cb()});
+  var s=localStorage.getItem('qx_reg');if(s){try{regData=JSON.parse(s)}catch(e){}}
+  cb();
+  fetch(REG_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){
+    if(JSON.stringify(d)!==JSON.stringify(regData)){regData=d;localStorage.setItem('qx_reg',JSON.stringify(d));renderRegTop()}
+  }).catch(function(){});
 }
 
 function saveRegData(){
+  localStorage.setItem('qx_reg',JSON.stringify(regData));
   var token=getGistToken();if(!token)return;
   fetch('https://api.github.com/gists/'+GIST_ID,{
     method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
     body:JSON.stringify({files:{'registration.json':{content:JSON.stringify(regData)}}})
-  }).catch(function(){});
+  }).then(function(r){return r.json()}).then(function(d){console.log('Reg synced OK')}).catch(function(e){alert('云端保存失败，数据仅保存在本地')});
 }
 
 function handleRegUpload(input){
