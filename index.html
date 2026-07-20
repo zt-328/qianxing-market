@@ -438,13 +438,14 @@ function getGistToken(){
 }
 
 function loadActs(cb){
+  // Render immediately from cache
+  var s=localStorage.getItem('qx_acts');
+  if(s){try{activities=JSON.parse(s)}catch(e){}}
+  cb();
+  // Then refresh from cloud in background
   fetch(GIST_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
-    activities = data; localStorage.setItem('qx_acts',JSON.stringify(data)); cb();
-  }).catch(function(){
-    var s=localStorage.getItem('qx_acts');
-    if(s){try{activities=JSON.parse(s)}catch(e){}}
-    cb();
-  });
+    if(JSON.stringify(data)!==JSON.stringify(activities)){activities=data;saveActs();renderSchedule()}
+  }).catch(function(){});
 }
 function saveActs(){
   localStorage.setItem('qx_acts',JSON.stringify(activities));
@@ -608,13 +609,11 @@ var CASES_URL = 'https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/cases
 var cases = [];
 
 function loadCases(cb){
+  var s=localStorage.getItem('qx_cases');if(s){try{cases=JSON.parse(s)}catch(e){}}
+  cb();
   fetch(CASES_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
-    cases = data; localStorage.setItem('qx_cases',JSON.stringify(data)); cb();
-  }).catch(function(){
-    var s=localStorage.getItem('qx_cases');
-    if(s){try{cases=JSON.parse(s)}catch(e){}}
-    cb();
-  });
+    if(JSON.stringify(data)!==JSON.stringify(cases)){cases=data;localStorage.setItem('qx_cases',JSON.stringify(data));renderCases()}
+  }).catch(function(){});
 }
 
 function saveCases(){
@@ -721,13 +720,11 @@ var SPEAKERS_URL = 'https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/sp
 var speakers = [];
 
 function loadSpeakers(cb){
+  var s=localStorage.getItem('qx_speakers');if(s){try{speakers=JSON.parse(s)}catch(e){}}
+  cb();
   fetch(SPEAKERS_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
-    speakers=data;localStorage.setItem('qx_speakers',JSON.stringify(data));cb();
-  }).catch(function(){
-    var s=localStorage.getItem('qx_speakers');
-    if(s){try{speakers=JSON.parse(s)}catch(e){}}
-    cb();
-  });
+    if(JSON.stringify(data)!==JSON.stringify(speakers)){speakers=data;localStorage.setItem('qx_speakers',JSON.stringify(data));renderSpeakers()}
+  }).catch(function(){});
 }
 
 function saveSpeakers(){
