@@ -886,7 +886,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
 <input type="text" id="fu-search" placeholder="搜索公司名称..." style="flex:1;min-width:200px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" oninput="renderFollowup()">
 <input type="file" id="fu-file" accept=".xlsx,.xls" onchange="handleFuUpload(this)" style="display:none">
-<button class="btn btn-primary btn-small" onclick="byId('fu-file').click()">&#128229; 导入Excel</button>
+<span id="fu-import-btn"></span>
 <button class="btn btn-outline btn-small" onclick="downloadFuExcel()">&#128228; 导出Excel</button>
 </div>
 <div class="card-grid" id="fu-list"></div>
@@ -1373,6 +1373,7 @@ function handleFuUpload(input){
 function str(v){return v?v.toString().trim():'';}
 
 function renderFollowup(){
+  byId('fu-import-btn').innerHTML = isAdmin() ? '<button class="btn btn-primary btn-small" onclick="byId(\'fu-file\').click()">&#128229; 导入Excel</button>' : '';
   fuSearch=byId('fu-search').value.trim().toLowerCase();fuPage=0;
   var filtered=fuSearch?customers.filter(function(c){return c.company.toLowerCase().indexOf(fuSearch)!==-1}):customers;
   byId('fu-total').textContent=filtered.length;
