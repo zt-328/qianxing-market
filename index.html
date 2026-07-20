@@ -993,14 +993,16 @@ nav.innerHTML=h;
 function switchPage(id,el){
 document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active')});
 if(el)el.classList.add('active');
+var prevPage=null;document.querySelectorAll('.page-section.active').forEach(function(s){prevPage=s.id.replace('page-','')});
+if(prevPage&&prevPage!==id){sessionStorage.setItem('qx_scroll_'+prevPage,byId('main-content').scrollTop)}
+sessionStorage.setItem('qx_lastPage',id);
 document.querySelectorAll('.page-section').forEach(function(s){s.classList.remove('active')});
 var t=byId('page-'+id);if(t)t.classList.add('active');
-sessionStorage.setItem('qx_lastPage',id);
 if(id==='schedule'){scheduleView='calendar';renderSchedule();}
 if(id==='cases'){loadCases(function(){initCaseFilters();renderCases()})}
 if(id==='speakers'){loadSpeakers(function(){initSpeakerFilters();renderSpeakers()})}
 if(id==='dashboard'){loadRegData(function(){byId('reg-updated').textContent='云端数据';renderRegTop()})}
-if(id==='followup'){loadCustomers(function(){renderFollowup()})}
+if(id==='followup'){loadCustomers(function(){byId('fu-search').value=sessionStorage.getItem('qx_fuSearch')||'';renderFollowup()})}
 if(id==='activity-types')renderTypePage();
 closeSidebar();
 }
@@ -1384,6 +1386,11 @@ function renderFollowup(){
   c.innerHTML=h;
   if(filtered.length>50)byId('fu-more').innerHTML='<button class="btn btn-outline btn-small" onclick="fuPage+=50;renderFuMore()">加载更多 ('+Math.min(50,filtered.length-50)+' 条)</button>';
   else byId('fu-more').innerHTML='';
+  // Restore scroll position
+  var sp=sessionStorage.getItem('qx_scroll_followup');
+  if(sp){setTimeout(function(){byId('main-content').scrollTop=parseInt(sp)},100)}
+  // Save search term
+  sessionStorage.setItem('qx_fuSearch',fuSearch);
 }
 
 function renderFuMore(){
