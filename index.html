@@ -275,7 +275,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <section class="page-section" id="page-cases">
 <h1 class="page-title">商家案例</h1>
 <p class="page-desc">精选标杆客户案例，按行业与类型筛选，点击卡片查看详情</p>
-<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap" id="case-filters"></div>
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center"><div style="display:flex;gap:8px;flex-wrap:wrap;flex:1" id="case-filters"></div></div>
 <div class="card-grid" id="case-list"></div>
 <div class="modal-overlay" id="case-modal"><div class="modal"><div class="modal-header"><h2 id="case-title"></h2><button class="modal-close" onclick="byId('case-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="case-body"></div></div></div>
 </section>
@@ -389,7 +389,7 @@ if(el)el.classList.add('active');
 document.querySelectorAll('.page-section').forEach(function(s){s.classList.remove('active')});
 var t=byId('page-'+id);if(t)t.classList.add('active');
 if(id==='schedule'){scheduleView='calendar';renderSchedule();}
-if(id==='cases'){initCaseFilters();renderCases();}
+if(id==='cases'){loadCases(function(){initCaseFilters();renderCases()})}
 if(id==='activity-types')renderTypePage();
 closeSidebar();
 }
@@ -597,7 +597,30 @@ function dlInvite(id){getFile(id,function(f){if(f){var u=URL.createObjectURL(f),
 function updateInvUI(id){var a=getAct(id);if(!a||!a.invite)return;var sec=document.querySelector('#detail-modal .invite-section');if(!sec)return;var isUrl=a.inviteType==='url'||/^https?:\/\//.test(a.invite),h='<div class="label">邀请函</div>';h+=isUrl?'<a href="'+e(a.invite)+'" target="_blank" class="btn btn-primary">打开链接</a>':'<button class="btn btn-primary" onclick="dlInvite('+id+')">下载邀请函</button>';h+='<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;word-break:break-all">'+(isUrl?'链接：':'文件：')+e(isUrl?a.invite:a.inviteName||'')+'</div>';if(isAdmin())h+='<button class="btn btn-outline btn-small" style="margin-top:6px" onclick="rmInvite('+id+')">移除</button>';sec.innerHTML=h}
 
 // ===== CUSTOMER CASES =====
-var CASES = [
+var CASES_URL = 'https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/cases.json';
+var cases = [];
+
+function loadCases(cb){
+  fetch(CASES_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
+    cases = data; localStorage.setItem('qx_cases',JSON.stringify(data)); cb();
+  }).catch(function(){
+    var s=localStorage.getItem('qx_cases');
+    if(s){try{cases=JSON.parse(s)}catch(e){}}
+    cb();
+  });
+}
+
+function saveCases(){
+  localStorage.setItem('qx_cases',JSON.stringify(cases));
+  var token = getGistToken();
+  if(!token) return;
+  fetch('https://api.github.com/gists/'+GIST_ID,{
+    method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({files:{'cases.json':{content:JSON.stringify(cases)}}})
+  }).catch(function(){});
+}
+
+var DEFAULT_CASES = [
 {name:'西安新时名邑汽车配件有限公司',ind:'汽车配件',type:'贸易公司',rev:'年销 100 万美金',story:'KP：唐晓飞。主营重卡配件，主要出口美国、非洲、东南亚。偶然机会接到外贸订单开始接触国际站，通过杭州寻梦坚定信念做金品诚企，付完款手上仅剩几千块，每天学习研究到深夜。现已发展到5名业务员，每月成交100万人民币以上。2年金品诚企。',url:'https://xaxsmy.en.alibaba.com'},
 {name:'西安华本商贸有限公司',ind:'美妆个护',type:'贸易公司',rev:'年销 3500 万人民币',story:'KP：李永明。主营女性私护产品，纯外贸，主要出口北美黑人女性市场及非洲。最初方案2.98万，四年升级为实力商家，六年升级KA，目前阿里年投入100万。李总最让人敬佩的是持续学习的意识，每次阿里活动都积极参与了解一手讯息。17年投入26万升级实力商家，20年新开店铺投入50万升级KA，22年再开两个平台投入50万。截至23年已合作10年，年出口额约3500万。',url:'https://chinaherbs01.en.alibaba.com'},
 {name:'陕西佳阳照明科技有限公司',ind:'灯具照明',type:'工贸一体',rev:'年销 3000 万人民币',story:'KP：田金鑫。主营灯具照明，纯外贸，主要出口美国、俄罗斯。夫妻档创业，17年通过父母赞助进入国际站，第一年兼职效果一般但看到巨大希望，第二年辞职全身心投入成交150万，第三年700万，到现在年出口超2000万。6年金品诚企。',url:'https://jyzmkj.en.alibaba.com'},
@@ -621,10 +644,14 @@ var CASES = [
 ];
 
 function renderCases(industry){
-var c=byId('case-list'),h='',filtered=industry?CASES.filter(function(x){return x.ind===industry}):CASES;
-if(filtered.length===0){h='<p style="font-size:13px;color:var(--text-secondary);padding:20px 0">暂无该行业案例</p>';c.innerHTML=h;return}
-filtered.forEach(function(x,i){
-h+='<div class="card clickable" style="cursor:pointer" onclick="openCase('+CASES.indexOf(x)+')"><h3>'+e(x.name)+'</h3>';
+var c=byId('case-list'),h='';
+if(isAdmin())h+='<button class="btn btn-primary btn-small" style="margin-bottom:12px" onclick="openAddCase()">+ 添加案例</button>';
+if(!cases.length){c.innerHTML=h+'<p style="font-size:13px;color:var(--text-secondary);padding:20px 0">暂无案例</p>';return}
+var filtered=industry?cases.filter(function(x){return x.ind===industry}):cases;
+if(filtered.length===0){c.innerHTML=h+'<p style="font-size:13px;color:var(--text-secondary);padding:20px 0">暂无该行业案例</p>';return}
+filtered.forEach(function(x){
+var idx=cases.indexOf(x);
+h+='<div class="card clickable" onclick="openCase('+idx+')"><h3>'+e(x.name)+'</h3>';
 h+='<div class="meta"><span>行业：'+e(x.ind)+'</span><span>'+e(x.type)+'</span><span style="color:var(--primary);font-weight:500">'+e(x.rev)+'</span></div>';
 h+='</div>';
 });
@@ -632,18 +659,44 @@ c.innerHTML=h;
 }
 
 function openCase(idx){
-var x=CASES[idx];if(!x)return;
+var x=cases[idx];if(!x)return;
 byId('case-title').textContent=x.name;
 var h='<span class="tag" style="margin-bottom:8px">'+e(x.ind)+'</span><span class="tag" style="margin-bottom:8px;margin-left:4px">'+e(x.type)+'</span>';
 h+='<div class="info-row" style="margin-top:16px"><span class="info-label">年销</span><span class="info-value" style="color:var(--primary);font-weight:500">'+e(x.rev)+'</span></div>';
 h+='<div style="margin-top:12px;font-size:14px;line-height:2;color:var(--text)">'+e(x.story)+'</div>';
 if(x.url)h+='<div style="margin-top:12px"><a href="'+e(x.url)+'" target="_blank" class="btn btn-outline btn-small">查看店铺</a></div>';
+if(isAdmin()){
+h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
+h+='<div class="edit-row"><label>行业</label><input type="text" id="ce-ind" value="'+e(x.ind||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+h+='<div class="edit-row"><label>类型</label><input type="text" id="ce-type" value="'+e(x.type||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+h+='<div class="edit-row"><label>年销</label><input type="text" id="ce-rev" value="'+e(x.rev||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+h+='<div class="edit-row"><label>店铺链接</label><input type="text" id="ce-url" value="'+e(x.url||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+h+='<div class="edit-row"><label>详细故事</label><textarea id="ce-story" rows="4" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;resize:vertical">'+e(x.story||'')+'</textarea></div>';
+h+='<div style="display:flex;gap:8px"><button class="btn btn-primary btn-small" onclick="saveCaseEdit('+idx+')">保存</button><button class="btn btn-outline btn-small" onclick="byId(\'case-modal\').classList.remove(\'open\')">取消</button><button class="btn btn-outline btn-small" style="margin-left:auto;color:#c04040;border-color:#c04040" onclick="delCase('+idx+')">删除</button></div></div>';
+}
 byId('case-body').innerHTML=h;byId('case-modal').classList.add('open');
+}
+
+function saveCaseEdit(idx){
+var x=cases[idx];if(!x)return;
+x.ind=byId('ce-ind').value.trim();x.type=byId('ce-type').value.trim();x.rev=byId('ce-rev').value.trim();
+x.url=byId('ce-url').value.trim();x.story=byId('ce-story').value.trim();
+saveCases();byId('case-modal').classList.remove('open');renderCases();
+}
+
+function openAddCase(){
+cases.push({name:'新案例',ind:'行业',type:'贸易公司',rev:'年销',story:'',url:''});
+var idx=cases.length-1;renderCases();openCase(idx);
+}
+
+function delCase(idx){
+if(!confirm('确定删除此案例？'))return;
+cases.splice(idx,1);saveCases();byId('case-modal').classList.remove('open');renderCases();
 }
 
 function initCaseFilters(){
 var inds=[];
-CASES.forEach(function(x){if(inds.indexOf(x.ind)===-1)inds.push(x.ind)});
+cases.forEach(function(x){if(x.ind&&inds.indexOf(x.ind)===-1)inds.push(x.ind)});
 var h='<span style="font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;background:var(--primary);color:#fff" onclick="renderCases()">全部</span>';
 inds.forEach(function(i){h+='<span style="font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:var(--card-bg);color:var(--text)" onclick="renderCases(\''+i+'\');updateCaseFilter(this)">'+i+'</span>'});
 byId('case-filters').innerHTML=h;
