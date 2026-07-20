@@ -880,7 +880,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 </table>
 </div>
 </section>
-<section class="page-section" id="page-followup"><div class="placeholder"><div class="icon-large">&#128101;</div><h2>客户跟进</h2><p>待内容填充</p></div></section>
+<section class="page-section" id="page-followup">
+<h1 class="page-title">客户跟进</h1>
+<p class="page-desc">历史活动客户沉淀 · 共 <span id="fu-total">0</span> 家企业</p>
+<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+<input type="text" id="fu-search" placeholder="搜索公司名称..." style="flex:1;min-width:200px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" oninput="renderFollowup()">
+<input type="file" id="fu-file" accept=".xlsx,.xls" onchange="handleFuUpload(this)" style="display:none">
+<button class="btn btn-primary btn-small" onclick="byId('fu-file').click()">&#128229; 导入Excel</button>
+</div>
+<div class="card-grid" id="fu-list"></div>
+<div style="text-align:center;margin-top:16px" id="fu-more"></div>
+<div class="modal-overlay" id="fu-modal"><div class="modal"><div class="modal-header"><h2 id="fu-title"></h2><button class="modal-close" onclick="byId('fu-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="fu-body"></div></div></div>
+</section>
 <section class="page-section" id="page-incentive"><div class="placeholder"><div class="icon-large">&#127942;</div><h2>激励政策</h2><p>待内容填充</p></div></section>
 <section class="page-section" id="page-reports"><div class="placeholder"><div class="icon-large">&#127881;</div><h2>战报 / 捷报</h2><p>待内容填充</p></div></section>
 <section class="page-section" id="page-signing"><div class="placeholder"><div class="icon-large">&#128176;</div><h2>新签明细</h2><p>待内容填充</p></div></section>
@@ -988,6 +999,7 @@ if(id==='schedule'){scheduleView='calendar';renderSchedule();}
 if(id==='cases'){loadCases(function(){initCaseFilters();renderCases()})}
 if(id==='speakers'){loadSpeakers(function(){initSpeakerFilters();renderSpeakers()})}
 if(id==='dashboard'){loadRegData(function(){byId('reg-updated').textContent='云端数据';renderRegTop()})}
+if(id==='followup'){loadCustomers(function(){renderFollowup()})}
 if(id==='activity-types')renderTypePage();
 closeSidebar();
 }
@@ -1304,6 +1316,105 @@ function updateCaseFilter(el){
 var all=document.querySelectorAll('#case-filters span');
 all.forEach(function(s){s.style.cssText='font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:var(--card-bg);color:var(--text)'});
 el.style.cssText='font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;background:var(--primary);color:#fff';
+}
+
+// ===== CUSTOMER FOLLOW-UP =====
+var customers=[],fuPage=0,fuSearch='';
+var CUST_URL='https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/customers.json';
+
+function loadCustomers(cb){
+  fetch(CUST_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){customers=d;cb()}).catch(function(){customers=[];cb()});
+}
+
+function saveCustomers(){
+  var token=getGistToken();if(!token)return;
+  fetch('https://api.github.com/gists/'+GIST_ID,{
+    method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({files:{'customers.json':{content:JSON.stringify(customers)}}})
+  }).catch(function(){});
+}
+
+function handleFuUpload(input){
+  var file=input.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var wb=XLSX.read(e.target.result,{type:'array'});
+    var sheet=wb.Sheets[wb.SheetNames[0]];
+    var rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+    if(rows.length<2){alert('表格为空');return}
+    var hdr=rows[0];
+    var idx={time:hdr.indexOf('时间'),activity:hdr.indexOf('活动名称'),company:hdr.indexOf('公司名称'),contact:hdr.indexOf('客户名称'),sales:hdr.indexOf('邀约销售名称'),sign:hdr.indexOf('是否线下签到')};
+    var newRecs=[];
+    for(var i=1;i<rows.length;i++){
+      var r=rows[i];var co=str(r[idx.company]);if(!co)continue;
+      newRecs.push({date:str(r[idx.time]),activity:str(r[idx.activity]),company:co,contact:str(r[idx.contact]),sales:str(r[idx.sales]),signed:str(r[idx.sign])==='是'});
+    }
+    // Merge into existing customers
+    var cmap={};customers.forEach(function(c){cmap[c.company]=c});
+    newRecs.forEach(function(r){
+      if(!cmap[r.company]){cmap[r.company]={company:r.company,contacts:[],sales:[],periods:[],total:0,activities:[]};customers.push(cmap[r.company])}
+      var c=cmap[r.company];
+      if(r.contact&&c.contacts.indexOf(r.contact)===-1)c.contacts.push(r.contact);
+      if(r.sales&&c.sales.indexOf(r.sales)===-1)c.sales.push(r.sales);
+      c.activities.push({date:r.date,activity:r.activity,contact:r.contact,sales:r.sales,signed:r.signed});
+      c.total=c.activities.length;
+    });
+    customers.sort(function(a,b){return b.total-a.total});
+    saveCustomers();renderFollowup();
+    alert('导入完成，新增 '+newRecs.length+' 条记录');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function str(v){return v?v.toString().trim():'';}
+
+function renderFollowup(){
+  fuSearch=byId('fu-search').value.trim().toLowerCase();fuPage=0;
+  var filtered=fuSearch?customers.filter(function(c){return c.company.toLowerCase().indexOf(fuSearch)!==-1}):customers;
+  byId('fu-total').textContent=filtered.length;
+  var page=filtered.slice(0,50),c=byId('fu-list'),h='';
+  page.forEach(function(x){
+    h+='<div class="card clickable" onclick="openFuDetail(\''+encodeURIComponent(x.company)+'\')">';
+    h+='<h3>'+e(x.company)+'</h3>';
+    h+='<p>参加 <strong>'+x.total+'</strong> 次活动 | '+e(x.periods?x.periods.join(' '):'')+'</p>';
+    h+='<div class="meta">联系人：'+e(x.contacts.slice(0,5).join('、'))+(x.contacts.length>5?' 等':'')+' | 销售：'+e(x.sales.slice(0,3).join('、'))+'</div>';
+    h+='</div>';
+  });
+  c.innerHTML=h;
+  if(filtered.length>50)byId('fu-more').innerHTML='<button class="btn btn-outline btn-small" onclick="fuPage+=50;renderFuMore()">加载更多 ('+Math.min(50,filtered.length-50)+' 条)</button>';
+  else byId('fu-more').innerHTML='';
+}
+
+function renderFuMore(){
+  var filtered=fuSearch?customers.filter(function(c){return c.company.toLowerCase().indexOf(fuSearch)!==-1}):customers;
+  var page=filtered.slice(fuPage,fuPage+50),c=byId('fu-list');
+  page.forEach(function(x){
+    var card=document.createElement('div');card.className='card clickable';
+    card.onclick=function(){openFuDetail(x.company)};
+    card.innerHTML='<h3>'+e(x.company)+'</h3><p>参加 <strong>'+x.total+'</strong> 次活动 | '+e(x.periods?x.periods.join(' '):'')+'</p><div class="meta">联系人：'+e(x.contacts.slice(0,5).join('、'))+' | 销售：'+e(x.sales.slice(0,3).join('、'))+'</div>';
+    c.appendChild(card);
+  });
+  var total=fuSearch?customers.filter(function(c){return c.company.toLowerCase().indexOf(fuSearch)!==-1}).length:customers.length;
+  var remaining=total-fuPage-50;
+  if(remaining>0)byId('fu-more').innerHTML='<button class="btn btn-outline btn-small" onclick="fuPage+=50;renderFuMore()">加载更多 ('+Math.min(50,remaining)+' 条)</button>';
+  else byId('fu-more').innerHTML='';
+}
+
+function openFuDetail(company){
+  company=decodeURIComponent(company);
+  var x=customers.find(function(c){return c.company===company});if(!x)return;
+  byId('fu-title').textContent=x.company;
+  var h='<div class="info-row"><span class="info-label">参加次数</span><span class="info-value">'+x.total+' 次 | '+e(x.periods?x.periods.join(' '):'')+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">联系人</span><span class="info-value">'+e(x.contacts.join('、'))+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">销售</span><span class="info-value">'+e(x.sales.join('、'))+'</span></div>';
+  h+='<div class="section-title">活动记录</div>';
+  h+='<table style="width:100%;font-size:13px;line-height:2.2"><tr style="font-weight:600;color:var(--text-secondary)"><td style="width:100px">时间</td><td>活动名称</td><td style="width:60px">签到</td></tr>';
+  var acts=x.activities.slice().reverse();
+  acts.forEach(function(a){
+    h+='<tr><td>'+e(a.date)+'</td><td>'+e(a.activity)+'</td><td>'+(a.signed?'<span style="color:#5B9E6F">&#10003;</span>':'<span style="color:#ccc">-</span>')+'</td></tr>';
+  });
+  h+='</table>';
+  byId('fu-body').innerHTML=h;byId('fu-modal').classList.add('open');
 }
 
 // ===== SPEAKERS =====
