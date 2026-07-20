@@ -272,7 +272,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <div class="script-card hot"><div class="s-num">话术 5 · 年度旗舰活动</div><div class="s-text">X总，这是我们每年最重要的一场活动，我建议您无论如何留出时间。核心商家大会在杭州阿里巴巴总部举办，中西部大区大概400位老板齐聚一堂，四天三夜的行程。为什么说它重要？因为这是全年唯一一次能同时接触到阿里官方高层、行业顶级讲师、以及几百位同行老板的机会。您可以在现场直接跟官方团队沟通平台最新政策和资源扶持——很多信息在外面是听不到的。同时您看看其他跟你同量级的商家他们现在在做什么、规划什么，这个视野开阔是非常有价值的。每年都有很多老板在这个会上把未来一整年的方向定下来。我先帮您报上名，机票住宿您提前安排一下。</div></div>
 </div>
 </section>
-<section class="page-section" id="page-cases"><div class="placeholder"><div class="icon-large">&#11088;</div><h2>商家案例</h2><p>待内容填充</p></div></section>
+<section class="page-section" id="page-cases">
+<h1 class="page-title">商家案例</h1>
+<p class="page-desc">精选标杆客户案例，按行业与类型筛选，点击卡片查看详情</p>
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap" id="case-filters"></div>
+<div class="card-grid" id="case-list"></div>
+<div class="modal-overlay" id="case-modal"><div class="modal"><div class="modal-header"><h2 id="case-title"></h2><button class="modal-close" onclick="byId('case-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="case-body"></div></div></div>
+</section>
 <section class="page-section" id="page-speakers"><div class="placeholder"><div class="icon-large">&#128100;</div><h2>讲师库</h2><p>待内容填充</p></div></section>
 <section class="page-section" id="page-materials"><div class="placeholder"><div class="icon-large">&#128193;</div><h2>活动素材</h2><p>待内容填充</p></div></section>
 <section class="page-section" id="page-star-intro"><div class="placeholder"><div class="icon-large">&#127775;</div><h2>销售星介绍 &amp; 加入流程</h2><p>待内容填充</p></div></section>
@@ -383,6 +389,7 @@ if(el)el.classList.add('active');
 document.querySelectorAll('.page-section').forEach(function(s){s.classList.remove('active')});
 var t=byId('page-'+id);if(t)t.classList.add('active');
 if(id==='schedule'){scheduleView='calendar';renderSchedule();}
+if(id==='cases'){initCaseFilters();renderCases();}
 if(id==='activity-types')renderTypePage();
 closeSidebar();
 }
@@ -589,6 +596,65 @@ function rmInvite(id){if(!confirm('确定移除邀请函？'))return;delFile(id)
 function dlInvite(id){getFile(id,function(f){if(f){var u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name||'邀请函';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u)},1000)}else{alert('加载失败')}})}
 function updateInvUI(id){var a=getAct(id);if(!a||!a.invite)return;var sec=document.querySelector('#detail-modal .invite-section');if(!sec)return;var isUrl=a.inviteType==='url'||/^https?:\/\//.test(a.invite),h='<div class="label">邀请函</div>';h+=isUrl?'<a href="'+e(a.invite)+'" target="_blank" class="btn btn-primary">打开链接</a>':'<button class="btn btn-primary" onclick="dlInvite('+id+')">下载邀请函</button>';h+='<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;word-break:break-all">'+(isUrl?'链接：':'文件：')+e(isUrl?a.invite:a.inviteName||'')+'</div>';if(isAdmin())h+='<button class="btn btn-outline btn-small" style="margin-top:6px" onclick="rmInvite('+id+')">移除</button>';sec.innerHTML=h}
 
+// ===== CUSTOMER CASES =====
+var CASES = [
+{name:'西安新时名邑汽车配件有限公司',ind:'汽车配件',type:'贸易公司',rev:'年销 100 万美金',story:'KP：唐晓飞。主营重卡配件，主要出口美国、非洲、东南亚。偶然机会接到外贸订单开始接触国际站，通过杭州寻梦坚定信念做金品诚企，付完款手上仅剩几千块，每天学习研究到深夜。现已发展到5名业务员，每月成交100万人民币以上。2年金品诚企。',url:'https://xaxsmy.en.alibaba.com'},
+{name:'西安华本商贸有限公司',ind:'美妆个护',type:'贸易公司',rev:'年销 3500 万人民币',story:'KP：李永明。主营女性私护产品，纯外贸，主要出口北美黑人女性市场及非洲。最初方案2.98万，四年升级为实力商家，六年升级KA，目前阿里年投入100万。李总最让人敬佩的是持续学习的意识，每次阿里活动都积极参与了解一手讯息。17年投入26万升级实力商家，20年新开店铺投入50万升级KA，22年再开两个平台投入50万。截至23年已合作10年，年出口额约3500万。',url:'https://chinaherbs01.en.alibaba.com'},
+{name:'陕西佳阳照明科技有限公司',ind:'灯具照明',type:'工贸一体',rev:'年销 3000 万人民币',story:'KP：田金鑫。主营灯具照明，纯外贸，主要出口美国、俄罗斯。夫妻档创业，17年通过父母赞助进入国际站，第一年兼职效果一般但看到巨大希望，第二年辞职全身心投入成交150万，第三年700万，到现在年出口超2000万。6年金品诚企。',url:'https://jyzmkj.en.alibaba.com'},
+{name:'陕西龙星新材料科技有限公司',ind:'节日礼品',type:'工贸一体',rev:'年销 1.6 亿人民币',story:'KP：王晓龙。主营仿真圣诞树及节日装饰品，SKA客户，9个平台。王总原在沿海做外贸，01年回西安与国际站合作，是最早的客户之一。最初在南窑头办公，条件艰苦，靠真诚打动俄罗斯客户成交3万美金。之后十几年紧跟阿里变化，每年外出学习2-3次。现已搬至高新新天地，团队上百人，年销近2亿，从圣诞树扩展到仿真植物、户外装饰等多个品类。',url:'https://cnlongstar.en.alibaba.com'},
+{name:'西安山鹰工贸有限公司',ind:'办公家具',type:'工贸一体',rev:'年销 5000 万人民币',story:'KP：严航伟。主营办公家具，纯外贸，主要出口东南亚、南非。老板之前在南方有了解过国际站，回西安后毅然选择合作，已合作9年。17年接到近1000万美金大单，积累了大量优质客户。20年将一个平台升级为金品诚企后效果大幅改善，23年计划升级第二个平台。目前仅2名业务员，计划继续扩招团队。',url:'https://xashanying.en.alibaba.com'},
+{name:'陕西宏硕科技有限公司',ind:'灯具照明',type:'贸易公司',rev:'年销 5 万美金（首年）',story:'KP：苏学涛。主营灯具照明，主要出口美国。典型内贸转外贸客户，工厂在广州。经朋友介绍了解阿里国际站，恰逢杭州游学活动，对接到行业小二后梳理自身情况，回来后直接落地达成合作。22年新平台，老板亲自运营，2名业务员，目前线上成交5万美金。1年金品诚企。',url:'https://xahskj.en.alibaba.com'},
+{name:'西安众安凯森生物科技有限公司',ind:'美妆个护',type:'贸易公司',rev:'年销 4000 万人民币',story:'KP：赵雪芳。主营美妆个护、中型美容仪器，纯外贸，主要出口美国。7个平台（含2个妇幼产品平台），15万金品方案。内贸转外贸典型，在杭州游学后快速落地合作方案，多平台多品类布局。',url:'https://ksbeauty.en.alibaba.com'},
+{name:'西安恒瑞康生物科技有限公司',ind:'生物提取',type:'贸易公司',rev:'年销 3000 万人民币',story:'KP：胡天勇。主营植体/动物提取物、化工产品，纯外贸，主要出口欧美。18年开始合作出口通，19年新开金品，20年再开金品。老板娘原是国际站业务员，赚钱后认定外贸方向，夫妻俩全身心投入。20年杭州游学后受到行业对比触动，全面升级金品。目前30多名业务员，年投入60万，3个金品平台。',url:'https://multihealth01.en.alibaba.com'},
+{name:'西安法斯拓进出口有限公司',ind:'紧固件',type:'贸易公司',rev:'年销 800 万美金',story:'KP：秦晓兰。主营紧固件、螺丝螺母，金品+问鼎+顶展+P4P+钻享。十几年传统外贸背景，西安分公司。20年12月成为KA商家，21年通过线下搬单+线上广告加持迅速成为五星商家。2年时间，线下从300万美金做到800万，线上成交3000万人民币。主要出口秘鲁、埃及、巴西、中东。',url:'https://fastoscrews.en.alibaba.com'},
+{name:'陕西得米实业有限公司',ind:'宠物用品',type:'贸易公司',rev:'月销 3 万美金',story:'KP：赵贤。国际站业务员创业，主营宠物用品，出口欧美、澳大利亚。21年离职单干，1个月开单，3个月通过直通车打造爆款狗窝，单月询盘400+，目前一个人操作全流程。1年金品诚企。',url:'https://demipets.en.alibaba.com'},
+{name:'陕西迪盛能源集团有限公司',ind:'新能源',type:'工贸一体',rev:'月均 4 万美金',story:'KP：王总。主营新能源电池、逆变器，出口欧洲、巴西、美国。赶上新能源行业爆发，快速抓住逆变器和家用电源需求，单个订单超10万美金。工厂在南方，西安为贸易事业部。3年金品诚企。',url:'https://cndsnyjt.en.alibaba.com'},
+{name:'河南合塑实业有限公司',ind:'建材管道',type:'工贸一体',rev:'年销 319 万美金',story:'KP：李峰。主营管道管材，5个平台，金品+小满+P4P。17年成立公司，18年开始做国际站，第五个月开单。19年疫情后趁国外供应链匮乏发力，单独组建外贸及运营部门。出口非洲、中东、南美、北美、东南亚，22年收319万美金。',url:'https://cnhesu.en.alibaba.com'},
+{name:'河南豫工机械有限公司',ind:'机械制造',type:'工贸一体',rev:'年均 82 万美金',story:'KP：李红旗。主营钻机设备，金品+小满+P4P，出口美国、欧洲。16年成立，经朋友介绍做国际站至今7年。开通四个月开单，18年上线小型挖掘机和钻机破局，3月单月20万美金，之后持续增长，18-22年年均82万美金。拥有8个平台，多品牌布局。',url:'https://yugongmachine.en.alibaba.com'},
+{name:'陕西富拓电子科技有限公司',ind:'电子元件',type:'贸易公司',rev:'年销 284 万美金',story:'KP：徐菊平。主营电子元器件、电气设备，SKA商家，双平台（富拓电子6年金品3星，富拓能源2年金品1星）。之前在外贸公司做业务员，一直坚持深耕阿里。22年共计2200多万人民币，复购老客户占257万美金。团队从0到1仅用一年，目前两个业务团队共7名业务员+总经办。',url:'https://sxfullstar.en.alibaba.com'},
+{name:'陕西迪奥环保集团有限公司',ind:'环保设备',type:'工贸一体',rev:'年销 300 万美金',story:'KP：李益喜、孙崔燕。主营水处理环保设备，金品+小满+直通车，出口美国、欧洲。内贸年销1.2亿，因外贸公司经常来拿货发现海外市场，开始做国际站。中间因搬迁工厂短暂中断，4月续约后扩充团队（2运营+1经理+1谈单），短短8个月规模达300万美金。',url:'https://dioa8.en.alibaba.com'},
+{name:'西安特普讯仪器设备有限公司',ind:'仪器设备',type:'贸易公司',rev:'年销 600 万美金',story:'KP：史红梅。主营实验室仪器设备（蒸馏、干燥、萃取），出口欧洲。最早做内贸，与合伙人分家后转外贸。13年开始做阿里国际站，15年生完孩子后全力投入做到200万。20年销售额达8000万，全部来自国际站。目前40多人业务团队，年投入60万平台费用，工厂在河南。',url:'https://toption.en.alibaba.com'},
+{name:'西安盖文电子科技有限公司',ind:'仪器仪表',type:'贸易公司',rev:'年销 1 亿人民币',story:'KP：耿杨敏。主营传感器（称重、温度）及干果类产品，6个平台，年投入200万。阿里客户经理创业，选中西安主流行业仪器仪表。14年开始第一个平台，前三年做到1000万，第四五年爆发。运营合伙人持股，业务端采用阿里销售模式。100多人团队，六七个主管，已拓展多个产品线。出口泰国、法国、哥伦比亚、欧美。',url:'https://gavin.en.alibaba.com'},
+{name:'中山厨之乐卫厨制品有限公司',ind:'厨房用品',type:'工厂',rev:'年销 1 亿人民币',story:'KP：罗总。主营厨房收纳类产品，出口东欧、西欧、美国。两兄弟负责公司，阿里合作十几年。网站和宣传视频投入10万外包专业制作，月询盘超1000条，已处于挑客户阶段。成功点：精准把握国外客户需求并充分展示。',url:'https://chuzhile.en.alibaba.com'},
+{name:'中山市灿欣电器制品有限公司',ind:'小家电',type:'工厂',rev:'年销 8000 万人民币',story:'KP：邹总。主营小家电打蛋器，双平台金品，出口东南亚。合作第十年，疫情前国际站只是辅助，2020年后几乎所有订单都来自国际站。产品价格亲民，目标客户明确——东南亚等发展中国家。9年金品诚企。',url:'https://zscanxin.en.alibaba.com'},
+{name:'中山市泰铭五金有限公司',ind:'五金紧固件',type:'工厂',rev:'年销 5000 万人民币',story:'KP：莫女士。主营螺丝钉，双平台年投入30万，出口俄罗斯、西欧、西班牙。13年前合作阿里国际站，之前做内销，国际站效果一直一般。疫情那年爆发式增长，租了新办公室、扩招团队，目前6人负责国际站业务，3000万全部来自线上，主要接10万人民币起步的大型OEM订单。13年金品诚企。',url:'https://zstmwj.en.alibaba.com'}
+];
+
+function renderCases(industry){
+var c=byId('case-list'),h='',filtered=industry?CASES.filter(function(x){return x.ind===industry}):CASES;
+if(filtered.length===0){h='<p style="font-size:13px;color:var(--text-secondary);padding:20px 0">暂无该行业案例</p>';c.innerHTML=h;return}
+filtered.forEach(function(x,i){
+h+='<div class="card clickable" style="cursor:pointer" onclick="openCase('+CASES.indexOf(x)+')"><h3>'+e(x.name)+'</h3>';
+h+='<div class="meta"><span>行业：'+e(x.ind)+'</span><span>'+e(x.type)+'</span><span style="color:var(--primary);font-weight:500">'+e(x.rev)+'</span></div>';
+h+='</div>';
+});
+c.innerHTML=h;
+}
+
+function openCase(idx){
+var x=CASES[idx];if(!x)return;
+byId('case-title').textContent=x.name;
+var h='<span class="tag" style="margin-bottom:8px">'+e(x.ind)+'</span><span class="tag" style="margin-bottom:8px;margin-left:4px">'+e(x.type)+'</span>';
+h+='<div class="info-row" style="margin-top:16px"><span class="info-label">年销</span><span class="info-value" style="color:var(--primary);font-weight:500">'+e(x.rev)+'</span></div>';
+h+='<div style="margin-top:12px;font-size:14px;line-height:2;color:var(--text)">'+e(x.story)+'</div>';
+if(x.url)h+='<div style="margin-top:12px"><a href="'+e(x.url)+'" target="_blank" class="btn btn-outline btn-small">查看店铺</a></div>';
+byId('case-body').innerHTML=h;byId('case-modal').classList.add('open');
+}
+
+function initCaseFilters(){
+var inds=[];
+CASES.forEach(function(x){if(inds.indexOf(x.ind)===-1)inds.push(x.ind)});
+var h='<span style="font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;background:var(--primary);color:#fff" onclick="renderCases()">全部</span>';
+inds.forEach(function(i){h+='<span style="font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:var(--card-bg);color:var(--text)" onclick="renderCases(\''+i+'\');updateCaseFilter(this)">'+i+'</span>'});
+byId('case-filters').innerHTML=h;
+}
+
+function updateCaseFilter(el){
+var all=document.querySelectorAll('#case-filters span');
+all.forEach(function(s){s.style.cssText='font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:var(--card-bg);color:var(--text)'});
+el.style.cssText='font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;background:var(--primary);color:#fff';
+}
+
 // ===== TYPE PAGE =====
 function getTG(a){if(a.cat==='新签活动')return'newSign';if(a.cat==='育商活动')return'yushang';if(a.cat==='付费活动')return'paid';return''}
 
@@ -653,6 +719,7 @@ function promptToken(){
 // Modal click-outside
 byId('detail-modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
 byId('add-modal').addEventListener('click',function(e){if(e.target===this)closeAddModal()});
+byId('case-modal').addEventListener('click',function(e){if(e.target===this)byId('case-modal').classList.remove('open')});
 </script>
 </body>
 </html>
