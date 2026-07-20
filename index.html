@@ -667,6 +667,7 @@ h+='<div style="margin-top:12px;font-size:14px;line-height:2;color:var(--text)">
 if(x.url)h+='<div style="margin-top:12px"><a href="'+e(x.url)+'" target="_blank" class="btn btn-outline btn-small">查看店铺</a></div>';
 if(isAdmin()){
 h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
+h+='<div class="edit-row"><label>公司名称</label><input type="text" id="ce-name" value="'+e(x.name||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
 h+='<div class="edit-row"><label>行业</label><input type="text" id="ce-ind" value="'+e(x.ind||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
 h+='<div class="edit-row"><label>类型</label><input type="text" id="ce-type" value="'+e(x.type||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
 h+='<div class="edit-row"><label>年销</label><input type="text" id="ce-rev" value="'+e(x.rev||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
@@ -679,7 +680,7 @@ byId('case-body').innerHTML=h;byId('case-modal').classList.add('open');
 
 function saveCaseEdit(idx){
 var x=cases[idx];if(!x)return;
-x.ind=byId('ce-ind').value.trim();x.type=byId('ce-type').value.trim();x.rev=byId('ce-rev').value.trim();
+x.name=byId('ce-name').value.trim();x.ind=byId('ce-ind').value.trim();x.type=byId('ce-type').value.trim();x.rev=byId('ce-rev').value.trim();
 x.url=byId('ce-url').value.trim();x.story=byId('ce-story').value.trim();
 saveCases();byId('case-modal').classList.remove('open');renderCases();
 }
