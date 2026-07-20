@@ -749,13 +749,14 @@ function renderSpeakers(tag){
     var idx=speakers.indexOf(s);
     h+='<div class="card clickable" onclick="openSpeaker('+idx+')">';
     h+='<div style="display:flex;gap:16px;align-items:flex-start">';
-    h+='<div style="width:64px;height:64px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--bg)"><img src="'+e(s.photo||'')+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></div>';
+    h+='<div style="width:64px;height:64px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--bg)" id="sp-img-'+idx+'"><img src="'+e(s.photo||'')+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></div>';
     h+='<div style="flex:1;min-width:0"><h3 style="font-size:15px;padding-right:0">'+e(s.name)+'</h3>';
     h+='<div class="meta"><span>'+e(s.ind||'')+'</span><span>'+e(s.type||'')+'</span></div>';
     if(s.tags)h+='<div style="margin-top:8px">'+s.tags.split(',').map(function(t){return '<span style="display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:var(--primary-light);color:var(--primary);margin-right:4px">'+t.trim()+'</span>'}).join('')+'</div>';
     h+='</div></div></div>';
   });
   c.innerHTML=h;
+  setTimeout(loadSpImages,200);
 }
 
 function openSpeaker(idx){
@@ -767,6 +768,7 @@ function openSpeaker(idx){
     h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
     h+='<div class="edit-row"><label>姓名</label><input type="text" id="sp-name" value="'+e(s.name||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
     h+='<div class="edit-row"><label>照片URL</label><input type="text" id="sp-photo" value="'+e(s.photo||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>上传照片文件</label><input type="file" id="sp-photo-file" accept=".jpg,.jpeg,.png,.webp" onchange="uploadSpPhoto('+idx+',this)" style="display:none"><button class="btn btn-outline btn-small" onclick="byId(\'sp-photo-file\').click()">选择照片</button><span id="sp-photo-name" style="font-size:12px;color:var(--text-secondary);margin-left:8px"></span></div>';
     h+='<div class="edit-row"><label>行业</label><input type="text" id="sp-ind" value="'+e(s.ind||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
     h+='<div class="edit-row"><label>类型</label><input type="text" id="sp-type" value="'+e(s.type||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
     h+='<div class="edit-row"><label>标签（逗号分隔，如：新签,育商运营）</label><input type="text" id="sp-tags" value="'+e(s.tags||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
@@ -788,6 +790,16 @@ function saveSpeakerEdit(idx){
 function openAddSpeaker(){speakers.push({name:'新讲师',photo:'',ind:'',type:'',tags:'新签',desc:'',story:''});var idx=speakers.length-1;renderSpeakers();openSpeaker(idx)}
 function delSpeaker(idx){if(!confirm('确定删除？'))return;speakers.splice(idx,1);saveSpeakers();byId('sp-modal').classList.remove('open');renderSpeakers()}
 
+function loadSpImages(){
+  speakers.forEach(function(s,i){
+    if(!s.photo||s.photo.indexOf('sp_idx:')!==0)return;
+    var fidx=parseInt(s.photo.split(':')[1]);
+    getFile('sp_'+fidx,function(f){
+      if(f){var el=byId('sp-img-'+i);if(el)el.innerHTML='<img src="'+URL.createObjectURL(f)+'" style="width:100%;height:100%;object-fit:cover">'}
+    });
+  });
+}
+
 function initSpeakerFilters(){
   var tags=['新签','育商运营','育商成交','育商营销'];
   var h='<span style="font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;background:var(--primary);color:#fff" onclick="renderSpeakers()">全部</span>';
@@ -799,6 +811,33 @@ function updateSpFilter(el){
   var all=document.querySelectorAll('#sp-filters span');
   all.forEach(function(s){s.style.cssText='font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:var(--card-bg);color:var(--text)'});
   el.style.cssText='font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;background:var(--primary);color:#fff';
+}
+
+function uploadSpPhoto(idx, input){
+  var file=input.files[0];if(!file)return;
+  byId('sp-photo-name').textContent=file.name;
+  saveFile('sp_'+idx,file,function(){
+    var s=speakers[idx];if(s){s.photo='sp_idx:'+idx;s.photoFile=file.name;saveSpeakers()}
+    openSpeaker(idx);
+  });
+}
+
+function getSpPhoto(s){
+  if(!s)return'';
+  if(s.photo&&s.photo.indexOf('sp_idx:')===0){var idx=parseInt(s.photo.split(':')[1]);return''}
+  return s.photo||'';
+}
+function getSpPhotoSrc(s, cb){
+  if(!s||!s.photo)return cb('');
+  if(s.photo.indexOf('sp_idx:')===0){
+    var idx=parseInt(s.photo.split(':')[1]);
+    getFile('sp_'+idx,function(f){
+      if(f)cb(URL.createObjectURL(f));
+      else cb(s.photo||'');
+    });
+    return;
+  }
+  cb(s.photo);
 }
 function getTG(a){if(a.cat==='新签活动')return'newSign';if(a.cat==='育商活动')return'yushang';if(a.cat==='付费活动')return'paid';return''}
 
