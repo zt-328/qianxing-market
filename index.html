@@ -758,12 +758,42 @@ function renderSpeakers(tag){
   c.innerHTML=h;
 }
 
+function openSpeaker(idx){
+  var s=speakers[idx];if(!s)return;
+  byId('sp-title').textContent=s.name;
+  var h='<div style="display:flex;gap:16px;margin-bottom:16px;align-items:center"><img src="'+e(s.photo||'')+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\'"><div><span class="tag" style="margin-bottom:4px">'+e(s.ind||'')+'</span><span class="tag" style="margin-bottom:4px;margin-left:4px">'+e(s.type||'')+'</span><div style="font-size:13px;color:var(--text);margin-top:4px">'+e(s.desc||'')+'</div></div></div>';
+  if(s.story)h+='<div style="font-size:14px;line-height:2;color:var(--text);white-space:pre-wrap">'+e(s.story)+'</div>';
+  if(isAdmin()){
+    h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
+    h+='<div class="edit-row"><label>姓名</label><input type="text" id="sp-name" value="'+e(s.name||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>照片URL</label><input type="text" id="sp-photo" value="'+e(s.photo||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>上传照片文件</label><input type="file" id="sp-photo-file" accept=".jpg,.jpeg,.png,.webp" onchange="uploadSpPhoto('+idx+',this)" style="display:none"><button class="btn btn-outline btn-small" onclick="byId(\'sp-photo-file\').click()">选择照片</button><span id="sp-photo-name" style="font-size:12px;color:var(--text-secondary);margin-left:8px"></span></div>';
+    h+='<div class="edit-row"><label>行业</label><input type="text" id="sp-ind" value="'+e(s.ind||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>类型</label><input type="text" id="sp-type" value="'+e(s.type||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>标签（逗号分隔）</label><input type="text" id="sp-tags" value="'+e(s.tags||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>简介</label><input type="text" id="sp-desc" value="'+e(s.desc||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>详细经历</label><textarea id="sp-story" rows="4" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;resize:vertical">'+e(s.story||'')+'</textarea></div>';
+    h+='<div style="display:flex;gap:8px"><button class="btn btn-primary btn-small" onclick="saveSpeakerEdit('+idx+')">保存</button><button class="btn btn-outline btn-small" onclick="byId(\'sp-modal\').classList.remove(\'open\')">取消</button><button class="btn btn-outline btn-small" style="margin-left:auto;color:#c04040;border-color:#c04040" onclick="delSpeaker('+idx+')">删除</button></div></div>';
+  }
+  byId('sp-body').innerHTML=h;byId('sp-modal').classList.add('open');
+}
+
 function initSpeakerFilters(){
   var tags=['新签','育商运营','育商成交','育商营销'];
   var h='<span style="font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;background:var(--primary);color:#fff" onclick="renderSpeakers()">全部</span>';
   tags.forEach(function(t){h+='<span style="font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:var(--card-bg);color:var(--text)" onclick="renderSpeakers(\''+t+'\');updateSpFilter(this)">'+t+'</span>'});
   byId('sp-filters').innerHTML=h;
 }
+
+function saveSpeakerEdit(idx){
+  var s=speakers[idx];if(!s)return;
+  s.name=byId('sp-name').value.trim();s.photo=byId('sp-photo').value.trim();s.ind=byId('sp-ind').value.trim();
+  s.type=byId('sp-type').value.trim();s.tags=byId('sp-tags').value.trim();s.desc=byId('sp-desc').value.trim();
+  s.story=byId('sp-story').value.trim();
+  saveSpeakers();byId('sp-modal').classList.remove('open');renderSpeakers();
+}
+function openAddSpeaker(){speakers.push({name:'新讲师',photo:'',ind:'',type:'',tags:'新签',desc:'',story:''});var idx=speakers.length-1;renderSpeakers();openSpeaker(idx)}
+function delSpeaker(idx){if(!confirm('确定删除？'))return;speakers.splice(idx,1);saveSpeakers();byId('sp-modal').classList.remove('open');renderSpeakers()}
 
 function updateSpFilter(el){
   var all=document.querySelectorAll('#sp-filters span');
