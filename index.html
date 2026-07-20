@@ -279,7 +279,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <div class="card-grid" id="case-list"></div>
 <div class="modal-overlay" id="case-modal"><div class="modal"><div class="modal-header"><h2 id="case-title"></h2><button class="modal-close" onclick="byId('case-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="case-body"></div></div></div>
 </section>
-<section class="page-section" id="page-speakers"><div class="placeholder"><div class="icon-large">&#128100;</div><h2>讲师库</h2><p>待内容填充</p></div></section>
+<section class="page-section" id="page-speakers">
+<h1 class="page-title">讲师库</h1>
+<p class="page-desc">活动讲师资源池，按活动类型筛选，点击卡片查看详情</p>
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap" id="sp-filters"></div>
+<div class="card-grid" id="sp-list"></div>
+<div class="modal-overlay" id="sp-modal"><div class="modal"><div class="modal-header"><h2 id="sp-title"></h2><button class="modal-close" onclick="byId('sp-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="sp-body"></div></div></div>
+</section>
 <section class="page-section" id="page-materials"><div class="placeholder"><div class="icon-large">&#128193;</div><h2>活动素材</h2><p>待内容填充</p></div></section>
 <section class="page-section" id="page-star-intro"><div class="placeholder"><div class="icon-large">&#127775;</div><h2>销售星介绍 &amp; 加入流程</h2><p>待内容填充</p></div></section>
 <section class="page-section" id="page-star-learn"><div class="placeholder"><div class="icon-large">&#128218;</div><h2>销售星学习资料</h2><p>待内容填充</p></div></section>
@@ -390,6 +396,7 @@ document.querySelectorAll('.page-section').forEach(function(s){s.classList.remov
 var t=byId('page-'+id);if(t)t.classList.add('active');
 if(id==='schedule'){scheduleView='calendar';renderSchedule();}
 if(id==='cases'){loadCases(function(){initCaseFilters();renderCases()})}
+if(id==='speakers'){loadSpeakers(function(){initSpeakerFilters();renderSpeakers()})}
 if(id==='activity-types')renderTypePage();
 closeSidebar();
 }
@@ -709,7 +716,90 @@ all.forEach(function(s){s.style.cssText='font-size:13px;padding:6px 14px;border-
 el.style.cssText='font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;background:var(--primary);color:#fff';
 }
 
-// ===== TYPE PAGE =====
+// ===== SPEAKERS =====
+var SPEAKERS_URL = 'https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/speakers.json';
+var speakers = [];
+
+function loadSpeakers(cb){
+  fetch(SPEAKERS_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
+    speakers=data;localStorage.setItem('qx_speakers',JSON.stringify(data));cb();
+  }).catch(function(){
+    var s=localStorage.getItem('qx_speakers');
+    if(s){try{speakers=JSON.parse(s)}catch(e){}}
+    cb();
+  });
+}
+
+function saveSpeakers(){
+  localStorage.setItem('qx_speakers',JSON.stringify(speakers));
+  var token=getGistToken();
+  if(!token)return;
+  fetch('https://api.github.com/gists/'+GIST_ID,{
+    method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({files:{'speakers.json':{content:JSON.stringify(speakers)}}})
+  }).catch(function(){});
+}
+
+function renderSpeakers(tag){
+  var c=byId('sp-list'),h='';
+  if(isAdmin())h+='<button class="btn btn-primary btn-small" style="margin-bottom:12px" onclick="openAddSpeaker()">+ 添加讲师</button>';
+  if(!speakers.length){c.innerHTML=h+'<p style="font-size:13px;color:var(--text-secondary);padding:20px 0">暂无讲师</p>';return}
+  var filtered=tag?speakers.filter(function(s){return s.tags&&s.tags.indexOf(tag)!==-1}):speakers;
+  filtered.forEach(function(s){
+    var idx=speakers.indexOf(s);
+    h+='<div class="card clickable" onclick="openSpeaker('+idx+')">';
+    h+='<div style="display:flex;gap:16px;align-items:flex-start">';
+    h+='<div style="width:64px;height:64px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--bg)"><img src="'+e(s.photo||'')+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></div>';
+    h+='<div style="flex:1;min-width:0"><h3 style="font-size:15px;padding-right:0">'+e(s.name)+'</h3>';
+    h+='<div class="meta"><span>'+e(s.ind||'')+'</span><span>'+e(s.type||'')+'</span></div>';
+    if(s.tags)h+='<div style="margin-top:8px">'+s.tags.split(',').map(function(t){return '<span style="display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:var(--primary-light);color:var(--primary);margin-right:4px">'+t.trim()+'</span>'}).join('')+'</div>';
+    h+='</div></div></div>';
+  });
+  c.innerHTML=h;
+}
+
+function openSpeaker(idx){
+  var s=speakers[idx];if(!s)return;
+  byId('sp-title').textContent=s.name;
+  var h='<div style="display:flex;gap:16px;margin-bottom:16px;align-items:center"><img src="'+e(s.photo||'')+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\'"><div><span class="tag" style="margin-bottom:4px">'+e(s.ind||'')+'</span><span class="tag" style="margin-bottom:4px;margin-left:4px">'+e(s.type||'')+'</span><div style="font-size:13px;color:var(--text);margin-top:4px">'+e(s.desc||'')+'</div></div></div>';
+  if(s.story)h+='<div style="font-size:14px;line-height:2;color:var(--text);white-space:pre-wrap">'+e(s.story)+'</div>';
+  if(isAdmin()){
+    h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
+    h+='<div class="edit-row"><label>姓名</label><input type="text" id="sp-name" value="'+e(s.name||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>照片URL</label><input type="text" id="sp-photo" value="'+e(s.photo||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>行业</label><input type="text" id="sp-ind" value="'+e(s.ind||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>类型</label><input type="text" id="sp-type" value="'+e(s.type||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>标签（逗号分隔，如：新签,育商运营）</label><input type="text" id="sp-tags" value="'+e(s.tags||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>简介</label><input type="text" id="sp-desc" value="'+e(s.desc||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>详细经历</label><textarea id="sp-story" rows="4" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;resize:vertical">'+e(s.story||'')+'</textarea></div>';
+    h+='<div style="display:flex;gap:8px"><button class="btn btn-primary btn-small" onclick="saveSpeakerEdit('+idx+')">保存</button><button class="btn btn-outline btn-small" onclick="byId(\'sp-modal\').classList.remove(\'open\')">取消</button><button class="btn btn-outline btn-small" style="margin-left:auto;color:#c04040;border-color:#c04040" onclick="delSpeaker('+idx+')">删除</button></div></div>';
+  }
+  byId('sp-body').innerHTML=h;byId('sp-modal').classList.add('open');
+}
+
+function saveSpeakerEdit(idx){
+  var s=speakers[idx];if(!s)return;
+  s.name=byId('sp-name').value.trim();s.photo=byId('sp-photo').value.trim();s.ind=byId('sp-ind').value.trim();
+  s.type=byId('sp-type').value.trim();s.tags=byId('sp-tags').value.trim();s.desc=byId('sp-desc').value.trim();
+  s.story=byId('sp-story').value.trim();
+  saveSpeakers();byId('sp-modal').classList.remove('open');renderSpeakers();
+}
+
+function openAddSpeaker(){speakers.push({name:'新讲师',photo:'',ind:'',type:'',tags:'新签',desc:'',story:''});var idx=speakers.length-1;renderSpeakers();openSpeaker(idx)}
+function delSpeaker(idx){if(!confirm('确定删除？'))return;speakers.splice(idx,1);saveSpeakers();byId('sp-modal').classList.remove('open');renderSpeakers()}
+
+function initSpeakerFilters(){
+  var tags=['新签','育商运营','育商成交','育商营销'];
+  var h='<span style="font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;background:var(--primary);color:#fff" onclick="renderSpeakers()">全部</span>';
+  tags.forEach(function(t){h+='<span style="font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:var(--card-bg);color:var(--text)" onclick="renderSpeakers(\''+t+'\');updateSpFilter(this)">'+t+'</span>'});
+  byId('sp-filters').innerHTML=h;
+}
+
+function updateSpFilter(el){
+  var all=document.querySelectorAll('#sp-filters span');
+  all.forEach(function(s){s.style.cssText='font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:var(--card-bg);color:var(--text)'});
+  el.style.cssText='font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;background:var(--primary);color:#fff';
+}
 function getTG(a){if(a.cat==='新签活动')return'newSign';if(a.cat==='育商活动')return'yushang';if(a.cat==='付费活动')return'paid';return''}
 
 function renderTypePage(){
