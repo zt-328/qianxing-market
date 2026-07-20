@@ -211,7 +211,66 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 </table>
 </div></div>
 </section>
-<section class="page-section" id="page-scripts"><div class="placeholder"><div class="icon-large">&#128172;</div><h2>邀约话术库</h2><p>待内容填充</p></div></section>
+<section class="page-section" id="page-scripts">
+<h1 class="page-title">邀约话术库</h1>
+<p class="page-desc">按活动类型分类的标准邀约话术，销售可直接复制使用。红色边框为高转化推荐话术。</p>
+
+<style scoped>
+.script-card{background:var(--card-bg);border-radius:10px;padding:16px 20px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:10px}
+.script-card .s-num{font-size:12px;color:var(--text-secondary);margin-bottom:4px}
+.script-card .s-text{font-size:14px;line-height:1.9;color:var(--text)}
+.script-card.hot{border-left:4px solid #c04040;background:#FFF8F7}
+.script-card.hot .s-num{color:#c04040;font-weight:600}
+.script-card.hot .s-num::after{content:' · 推荐'}
+.tab-row{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.tab-btn2{padding:6px 18px;border:1px solid var(--border);border-radius:20px;background:var(--card-bg);font-size:13px;cursor:pointer;color:var(--text);transition:all .15s}
+.tab-btn2.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.tab-btn2:hover:not(.active){border-color:var(--primary);color:var(--primary)}
+.ss-section{display:none}
+.ss-section.active{display:block}
+</style>
+
+<div class="tab-row">
+<button class="tab-btn2 active" onclick="switchSTab('newsign')">新签活动</button>
+<button class="tab-btn2" onclick="switchSTab('yushang')">育商活动</button>
+<button class="tab-btn2" onclick="switchSTab('paid')">付费活动</button>
+</div>
+
+<div class="ss-section active" id="ss-newsign">
+<div class="section-title">日常沙龙</div>
+<div class="script-card"><div class="s-num">话术 1 · 初次触达</div><div class="s-text">X总您好，我是阿里国际站本地服务中心的小X。这周三下午我们在公司有一场小型的跨境电商分享会，邀请了本地一位做汽配的老板来分享他从零开始做外贸、年销千万的经历。就十来个人，我帮您留个位置？</div></div>
+<div class="script-card hot"><div class="s-num">话术 2 · 价值驱动</div><div class="s-text">X总，很多传统内贸老板都问我一个问题：现在做外贸晚不晚？正好这周有个活动，请了本地标杆商家亲身讲他的转型故事，从一个内贸门店做到年销1400万——全程只用阿里国际站一个平台。您来听听，半小时就行，听完您就知道您这个行业适不适合做出海。</div></div>
+<div class="script-card"><div class="s-num">话术 3 · 跟催确认</div><div class="s-text">X总，昨天跟您说的周三下午那场分享会，我刚跟讲师确认了，这次会重点讲怎么用AI工具降低外贸门槛，不需要团队、不需要会英语就能上手。很多老板之前就是被这个卡住了，您来听一下应该能解决顾虑。下午两点开始，地址发您微信了。</div></div>
+
+<div class="section-title" style="margin-top:24px">大型峰会</div>
+<div class="script-card"><div class="s-num">话术 4 · 峰会邀约</div><div class="s-text">X总，月底我们联合阿里国际站官方举办年度跨境电商峰会，有政府领导致辞、官方解读最新外贸政策，还邀请了全国级别标杆商家分享。这种规格的会议一年就一两次，参加的老板最起码能了解清楚现在外贸到底怎么做，帮您少走很多弯路。我先帮您登记？</div></div>
+<div class="script-card hot"><div class="s-num">话术 5 · 紧迫感驱动</div><div class="s-text">X总，咱们这场峰会现在已有200多位老板报名了，我们公司只分到50个名额，我手里还剩3个。这次嘉宾阵容真的很难得，全国标杆商家讲自己怎么从年销几十万做到几千万的，错过挺可惜的。我先帮您锁定一个位置？</div></div>
+</div>
+
+<div class="ss-section" id="ss-yushang">
+<div class="section-title">培训赋能</div>
+<div class="script-card"><div class="s-num">话术 1 · 业务培训</div><div class="s-text">X总，这周五下午我们有一场外贸业务实操培训，专门讲怎么提高询盘转化率。很多商家产品挂上去了但没人问价，或者问了价谈不下来——这次培训就是帮团队解决这些具体问题的。让业务员过来听听，学完就能直接用。</div></div>
+<div class="script-card hot"><div class="s-num">话术 2 · Accio Work</div><div class="s-text">X总，您团队现在每天花多少时间在发产品、回询盘上？我们新上线了一个AI工具叫Accio Work，可以帮商家自动化做选品、写文案、跟询盘，效果很猛，已经有客户用了之后一个月询盘涨了40%。下周二有一场专门的企业版交付课，建议您或运营负责人亲自来学，半天时间，带着电脑来，学完就能回去用。</div></div>
+<div class="script-card"><div class="s-num">话术 3 · 运营培训</div><div class="s-text">X总，我看您店铺最近曝光有点下降，可能是P4P投放需要调整一下。下周有一场运营专题培训，专门讲直通车怎么精准投放、怎么用数据反推关键词优化，都是实战干货。这种课平时在外面要花几千块钱，咱们客户免费参加，我帮您把运营的同学报上名？</div></div>
+
+<div class="section-title" style="margin-top:24px">营销转化</div>
+<div class="script-card"><div class="s-num">话术 4 · 升级邀约</div><div class="s-text">X总，您现在的出口通基础打得很扎实了，但平台上80%的头部流量都在金品诚企那里。下周有一场老客分享会，讲的是一个做家居的商家怎么从出口通升到金品之后三个月业绩翻倍的案例。您来听一下，看看适不适合您的节奏。</div></div>
+<div class="script-card hot"><div class="s-num">话术 5 · 案例推动</div><div class="s-text">X总，最近有个客户跟您同一行业的，上个月刚升级了金品，这个月询盘直接涨了60%。他自己也没想到效果这么快。周三下午有个闭门交流会，就几个老客户坐一起聊聊，他也来，您过来听听他的真实感受，比我说什么都管用。</div></div>
+</div>
+
+<div class="ss-section" id="ss-paid">
+<div class="section-title">游学参访</div>
+<div class="script-card"><div class="s-num">话术 1 · 体验式邀约</div><div class="s-text">X总，说再多不如亲眼看看。月底我们组织重庆游学，带您参观三家已经做得非常成功的跨境企业——有做汽配的、有做户外产品的，都是年销几千万的标杆。您跟老板面对面聊聊，看看人家从选品到物流到团队怎么运转的。三天两夜只限20人，已经报了一半了。</div></div>
+<div class="script-card hot"><div class="s-num">话术 2 · 降低决策门槛</div><div class="s-text">X总，您花了很多时间了解外贸，现在最难的不是"要不要做"，而是"怎么开始"。重庆游学就是帮您解决这个的——您不用马上做决定，先去看看。看完之后您再判断，不合适就当去重庆玩了两天，也值了。早鸟价只要899，含吃住交通，比自己去还划算。</div></div>
+
+<div class="section-title" style="margin-top:24px">橙功营 / 领航</div>
+<div class="script-card"><div class="s-num">话术 3 · 老板进阶</div><div class="s-text">X总，您现在不光是平台运营的问题了，更多是公司管理、团队搭建和商业模式升级。下个月有一期橙功营，三天两夜封闭式学习，专门针对外贸老板的痛点——怎么搭团队、做绩效、用数据决策。带了几十个老板了，反馈都很好，说比外面几万块的商学院还实用。</div></div>
+<div class="script-card"><div class="s-num">话术 4 · 圈层价值</div><div class="s-text">X总，橙功营不光是上课，更是跟同行老板交朋友的机会。三天在一起，大家聊生意、聊渠道、聊踩过的坑，很多老板参加完之后互相成了合作伙伴。这种圈子在外面花钱都买不到，名额不多，我先帮您预留一个？</div></div>
+
+<div class="section-title" style="margin-top:24px">核心商家大会</div>
+<div class="script-card hot"><div class="s-num">话术 5 · 大方案攻坚</div><div class="s-text">X总，我们每年最重要的活动就是核心商家大会了，在杭州阿里总部办，中西部大区400个老板聚在一起。这四天就能帮您把国际站的整套大方案定下来——新客户直接签，老客户直接升级，而且现场有专属优惠。很多老板就是在这个会上把未来一年的方向定下来的，您一起来，我们帮您把方案对清楚。</div></div>
+</div>
+</section>
 <section class="page-section" id="page-cases"><div class="placeholder"><div class="icon-large">&#11088;</div><h2>商家案例</h2><p>待内容填充</p></div></section>
 <section class="page-section" id="page-speakers"><div class="placeholder"><div class="icon-large">&#128100;</div><h2>讲师库</h2><p>待内容填充</p></div></section>
 <section class="page-section" id="page-materials"><div class="placeholder"><div class="icon-large">&#128193;</div><h2>活动素材</h2><p>待内容填充</p></div></section>
@@ -561,6 +620,7 @@ function e(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')
 // ===== SIDEBAR =====
 function toggleSidebar(){var s=byId('sidebar'),o=byId('overlay');if(s.classList.contains('open')){s.classList.remove('open');o.style.display='none'}else{s.classList.add('open');o.style.display='block'}}
 function closeSidebar(){byId('sidebar').classList.remove('open');byId('overlay').style.display='none'}
+function switchSTab(t){document.querySelectorAll('#script-tabs .tab-btn2,#page-scripts .tab-btn2').forEach(function(b){b.classList.remove('active')});var btns=document.querySelectorAll('#page-scripts .tab-btn2');btns.forEach(function(b){if(b.textContent.indexOf(t==='newsign'?'新签':t==='yushang'?'育商':'付费')!==-1)b.classList.add('active')});document.querySelectorAll('.ss-section').forEach(function(s){s.classList.remove('active')});var el=byId('ss-'+t);if(el)el.classList.add('active')}
 
 // ===== INIT =====
 (function init(){
