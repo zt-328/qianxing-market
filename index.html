@@ -1640,7 +1640,7 @@ function openSpeaker(idx){
   byId('sp-title').textContent=s.name;
   var h='<div style="display:flex;gap:16px;margin-bottom:16px;align-items:center"><img src="'+e(s.photo||'')+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\'"><div><span class="tag" style="margin-bottom:4px">'+e(s.ind||'')+'</span><span class="tag" style="margin-bottom:4px;margin-left:4px">'+e(s.type||'')+'</span><div style="font-size:13px;color:var(--text);margin-top:4px">'+e(s.desc||'')+'</div></div></div>';
   if(s.story)h+='<div style="font-size:14px;line-height:2;color:var(--text);white-space:pre-wrap">'+e(s.story)+'</div>';
-  if(s.url){var urls=(s.url||'').split(',').filter(function(u){return u.trim()});if(urls.length){h+='<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">';urls.forEach(function(u,i){h+='<a href="'+e(u.trim())+'" target="_blank" class="btn btn-outline btn-small">&#128279; 店铺'+(urls.length>1?(i+1):'')+'</a>'});h+='</div>';}}
+  if(s.url){var urls=(s.url||'').split(/[,，]/).filter(function(u){return u.trim()});if(urls.length){h+='<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">';urls.forEach(function(u,i){h+='<a href="'+e(u.trim())+'" target="_blank" class="btn btn-outline btn-small">&#128279; 店铺'+(urls.length>1?(i+1):'')+'</a>'});h+='</div>';}}
   if(isAdmin()){
     h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
     h+='<div class="edit-row"><label>姓名</label><input type="text" id="sp-name" value="'+e(s.name||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
@@ -1821,16 +1821,12 @@ function renderRegTop(){
 (function init(){
 var u=getU();
 if(u){byId('login-page').style.display='none';byId('app-container').classList.add('active');buildNav();renderLoginUI();
-  // Preload activities before navigating to last page
-  loadActs(function(){
-    var lastPage=sessionStorage.getItem('qx_lastPage');
-    if(lastPage&&lastPage!=='schedule'&&byId('page-'+lastPage)){
-      switchPage(lastPage,document.querySelector('.nav-item[data-page=\"'+lastPage+'\"]'));
-    } else {
-      renderSchedule();
-    }
-    if(isAdmin()&&!getGistToken())promptToken();
-  });}
+  loadActs(function(){renderSchedule();});
+  var lastPage=sessionStorage.getItem('qx_lastPage');
+  if(lastPage&&lastPage!=='schedule'&&byId('page-'+lastPage)){
+    setTimeout(function(){switchPage(lastPage,document.querySelector('.nav-item[data-page=\"'+lastPage+'\"]'))},500);
+  }
+  if(isAdmin()&&!getGistToken())setTimeout(function(){promptToken()},1000);}
 else{byId('login-page').style.display='flex'}
 })();
 
