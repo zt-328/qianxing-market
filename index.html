@@ -1640,7 +1640,7 @@ function openSpeaker(idx){
   byId('sp-title').textContent=s.name;
   var h='<div style="display:flex;gap:16px;margin-bottom:16px;align-items:center"><img src="'+e(s.photo||'')+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\'"><div><span class="tag" style="margin-bottom:4px">'+e(s.ind||'')+'</span><span class="tag" style="margin-bottom:4px;margin-left:4px">'+e(s.type||'')+'</span><div style="font-size:13px;color:var(--text);margin-top:4px">'+e(s.desc||'')+'</div></div></div>';
   if(s.story)h+='<div style="font-size:14px;line-height:2;color:var(--text);white-space:pre-wrap">'+e(s.story)+'</div>';
-  if(s.url)h+='<div style="margin-top:8px"><a href="'+e(s.url)+'" target="_blank" class="btn btn-primary btn-small">&#128279; 查看店铺</a></div>';
+  if(s.url){var urls=(s.url||'').split(',').filter(function(u){return u.trim()});if(urls.length){h+='<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">';urls.forEach(function(u,i){h+='<a href="'+e(u.trim())+'" target="_blank" class="btn btn-outline btn-small">&#128279; 店铺'+(urls.length>1?(i+1):'')+'</a>'});h+='</div>';}}
   if(isAdmin()){
     h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
     h+='<div class="edit-row"><label>姓名</label><input type="text" id="sp-name" value="'+e(s.name||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
@@ -1650,7 +1650,7 @@ function openSpeaker(idx){
     h+='<div class="edit-row"><label>类型</label><input type="text" id="sp-type" value="'+e(s.type||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
     h+='<div class="edit-row"><label>标签（逗号分隔）</label><input type="text" id="sp-tags" value="'+e(s.tags||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
     h+='<div class="edit-row"><label>简介</label><input type="text" id="sp-desc" value="'+e(s.desc||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
-    h+='<div class="edit-row"><label>店铺链接</label><input type="text" id="sp-url" value="'+e(s.url||'')+'" placeholder="阿里国际站店铺链接" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>店铺链接（多个用逗号分隔）</label><input type="text" id="sp-url" value="'+e(s.url||'')+'" placeholder="https://xxx.en.alibaba.com, https://yyy.en.alibaba.com" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
     h+='<div class="edit-row"><label>详细经历</label><textarea id="sp-story" rows="4" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;resize:vertical">'+e(s.story||'')+'</textarea></div>';
     h+='<div style="display:flex;gap:8px"><button class="btn btn-primary btn-small" onclick="saveSpeakerEdit('+idx+')">保存</button><button class="btn btn-outline btn-small" onclick="byId(\'sp-modal\').classList.remove(\'open\')">取消</button><button class="btn btn-outline btn-small" style="margin-left:auto;color:#c04040;border-color:#c04040" onclick="delSpeaker('+idx+')">删除</button></div></div>';
   }
