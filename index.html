@@ -1909,15 +1909,21 @@ function renderRegTop(){
 // ===== SIGNING DATA =====
 var signingData=[],SN_URL='https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/signing.json';
 
+var signingData=[];
 function loadSigning(cb){
-  fetch(SN_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){signingData=d||[];renderSigning()}).catch(function(){signingData=[];renderSigning()});
-  if(cb)cb();
+  var s=localStorage.getItem('qx_signing');if(s){try{signingData=JSON.parse(s)}catch(e){}}
+  renderSigning();if(cb)cb();
+  var t=getGistToken();if(!t){fetch(SN_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){if(d&&d.length>=signingData.length){signingData=d;localStorage.setItem('qx_signing',JSON.stringify(d));renderSigning()}}).catch(function(){})}
+  else{loadFromGist()}
 }
-
+function loadFromGist(){
+  fetch(SN_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){if(d.length>signingData.length){signingData=d;localStorage.setItem('qx_signing',JSON.stringify(d));renderSigning()}}).catch(function(){});
+}
 function saveSigning(){
   localStorage.setItem('qx_signing',JSON.stringify(signingData));
+  renderSigning();
   var t=getGistToken();if(!t)return;
-  fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+t,'Content-Type':'application/json'},body:JSON.stringify({files:{'signing.json':{content:JSON.stringify(signingData)}}})}).catch(function(){alert('云端保存失败，数据已存本地')})
+  fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+t,'Content-Type':'application/json'},body:JSON.stringify({files:{'signing.json':{content:JSON.stringify(signingData)}}})}).catch(function(){});
 }
 
 function renderSigning(){
