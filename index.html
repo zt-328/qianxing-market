@@ -927,6 +927,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 // ===== LAZY LOAD XLSX =====
 var xlsxReady=false;
@@ -1766,8 +1767,6 @@ function saveRegData(){
 
 function handleRegUpload(input){
   var file=input.files[0];if(!file)return;
-  ensureXLSX(function(){doRegUpload(file)});}
-function doRegUpload(file){
   var reader=new FileReader();
   reader.onload=function(e){
     var wb=XLSX.read(e.target.result,{type:'array'});
