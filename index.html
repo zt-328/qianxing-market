@@ -1074,10 +1074,12 @@ function loadActs(cb){
   if(s){try{activities=JSON.parse(s)}catch(e){}}
   if(!activities.length){activities=DEFAULT_ACTS.map(function(a){return Object.assign({invite:'',inviteType:'',inviteName:''},a)});saveActs();}
   cb();
-  // Refresh from cloud
-  fetch(GIST_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
-    if(data.length){activities=data;saveActs();renderSchedule()}
-  }).catch(function(){});
+  // Background refresh
+  setTimeout(function(){
+    fetch(GIST_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
+      if(data.length&&data.length!==activities.length){activities=data;saveActs();renderSchedule()}
+    }).catch(function(){});
+  },2000);
 }
 function saveActs(){
   localStorage.setItem('qx_acts',JSON.stringify(activities));
@@ -1102,7 +1104,7 @@ return r;
 function renderSchedule(){
   var c=byId('page-schedule');if(!c)return;
   var h='';
-  if(!activities.length){c.innerHTML='<div class="placeholder"><div class="icon-large">&#9203;</div><h2>加载中...</h2><p>正在同步活动数据</p></div>';return}
+  if(!activities.length){c.innerHTML='<div class=\"placeholder\"><div class=\"icon-large\">&#9203;</div><h2>加载中...</h2><p>首次访问需同步数据，请稍候</p></div>';return}
 var inviting=0,upcoming=0,done=0,invitingList=[];
 activities.forEach(function(a){var s=getDisplayStatus(a);if(s==='inviting'){inviting++;invitingList.push(a)}else if(s==='upcoming')upcoming++;else if(s==='done')done++;});
 
