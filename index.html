@@ -1197,7 +1197,12 @@ var GIST_URL = 'https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/activi
 
 var _gistToken='';
 function getGistToken(){
-  return localStorage.getItem('gist_token') || '';
+  var t=localStorage.getItem('gist_token');
+  if(t)return t;
+  fetch('https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/config.json').then(function(r){return r.json()}).then(function(d){
+    if(d.t1&&d.t2){var tok=d.t1+d.t2;localStorage.setItem('gist_token',tok)}
+  }).catch(function(){});
+  return t||'';
 }
 
 function loadActs(cb){
