@@ -286,12 +286,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <div class="card-grid" id="sp-list"></div>
 <div class="modal-overlay" id="sp-modal"><div class="modal"><div class="modal-header"><h2 id="sp-title"></h2><button class="modal-close" onclick="byId('sp-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="sp-body"></div></div></div>
 </section>
-<section class="page-section" id="page-materials">
-<h1 class="page-title">活动素材</h1>
-<p class="page-desc">活动结束后自动生成卡片，点击上传照片和课件</p>
-<div class="card-grid" id="mat-list"></div>
-<div class="modal-overlay" id="mat-modal"><div class="modal"><div class="modal-header"><h2 id="mat-title"></h2><button class="modal-close" onclick="byId('mat-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="mat-body"></div></div></div>
-</section>
+
 <section class="page-section" id="page-star-intro">
 <h1 class="page-title">销售星介绍 &amp; 加入流程</h1>
 <p class="page-desc">以「阿里巴巴国际站客户经理」身份在社交媒体平台建立个人IP，通过内容获客拓展业务</p>
@@ -977,7 +972,7 @@ var scheduleView = 'calendar'; // 'calendar' or 'inviting'
 // NAV items
 var NAV_ITEMS = [
 {group:'活动管理',items:[{id:'schedule',icon:'&#128197;',label:'活动排期'},{id:'activity-types',icon:'&#128204;',label:'活动类型'},{id:'sop',icon:'&#128221;',label:'活动邀约SOP'},{id:'scripts',icon:'&#128172;',label:'邀约话术库'}]},
-{group:'赋能资源',items:[{id:'cases',icon:'&#11088;',label:'商家案例'},{id:'speakers',icon:'&#128100;',label:'讲师库'},{id:'materials',icon:'&#128193;',label:'活动素材'}]},
+{group:'赋能资源',items:[{id:'cases',icon:'&#11088;',label:'商家案例'},{id:'speakers',icon:'&#128100;',label:'讲师库'}]},
 {group:'销售星 · 抖音获客',items:[{id:'star-intro',icon:'&#127775;',label:'销售星介绍 & 加入流程'},{id:'star-learn',icon:'&#128218;',label:'销售星学习资料'},{id:'star-sop',icon:'&#128203;',label:'销售星工作SOP'},{id:'star-customers',icon:'&#128101;',label:'销售星客户名单'},{id:'star-reports',icon:'&#127881;',label:'销售星战报'}]},
 {group:'数据与激励',items:[{id:'dashboard',icon:'&#128200;',label:'活动数据看板'},{id:'followup',icon:'&#128101;',label:'客户跟进'}]},
 {group:'业绩追踪',items:[{id:'signing',icon:'&#128176;',label:'新签明细'}]}
@@ -1031,7 +1026,7 @@ if(id==='schedule'){scheduleView='calendar';renderSchedule();}
 if(id==='cases'){loadCases(function(){initCaseFilters();renderCases()})}
 if(id==='speakers'){loadSpeakers(function(){initSpeakerFilters();renderSpeakers()})}
 if(id==='star-customers'){loadSSCustomers(function(){renderSSCustomers()})}
-if(id==='materials'){loadMaterials(function(){renderMaterials()})}
+
 if(id==='dashboard'){loadRegData(function(){})}
 if(id==='followup'){loadCustomers(function(){byId('fu-search').value=sessionStorage.getItem('qx_fuSearch')||'';renderFollowup()})}
 if(id==='activity-types')renderTypePage();
@@ -1824,56 +1819,6 @@ function renderRegTop(){
   document.querySelector('#page-dashboard .db-alert').innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px"><h3 style="font-size:16px;margin-bottom:6px">&#128197; 7月22日 秦商出海沙龙</h3><div style="display:flex;gap:8px;align-items:center"><span style="font-size:12px;color:var(--text-secondary)">数据截至：<span id="reg-updated-text">'+byId('reg-updated').textContent+'</span></span><input type="file" id="reg-file" accept=".xlsx,.xls" onchange="handleRegUpload(this)" style="display:none"><button class="btn btn-primary btn-small" onclick="byId(\'reg-file\').click()">&#128229; 上传报名Excel</button></div></div>'+html;
 }
 
-// ===== MATERIALS =====
-var materials=[];var MAT_URL='https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/materials.json';
-
-function loadMaterials(cb){var s=localStorage.getItem('qx_mats');if(s){try{materials=JSON.parse(s)}catch(e){}}// Remove materials for unfinished activities
-materials=materials.filter(function(m){var a=activities.find(function(x){return x.id===m.actId});return a&&getDisplayStatus(a)==='done'});
-activities.forEach(function(a){if(!a||!a.id||getDisplayStatus(a)!=='done')return;var f=materials.find(function(m){return m.actId===a.id});if(!f){materials.push({actId:a.id,title:a.title,date:a.date,cat:a.cat,time:a.date,addr:'',cost:'',costImg:'',invoiceImg:'',attendance:'',poster:'',photos:[]})}});saveMaterials();cb();fetch(MAT_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){materials=d;localStorage.setItem('qx_mats',JSON.stringify(d));renderMaterials()}).catch(function(){})}
-function saveMaterials(){
-  // Save text data to Gist (without image blobs)
-  var txtData=materials.map(function(m){return {actId:m.actId,title:m.title,date:m.date,cat:m.cat,time:m.time,addr:m.addr,cost:m.cost,attendance:m.attendance,costImg:!!m.costImg,invoiceImg:!!m.invoiceImg,poster:!!m.poster,photosCount:(m.photos||[]).length}});
-  localStorage.setItem('qx_mats',JSON.stringify(materials));
-  var t=getGistToken();if(!t)return;
-  fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+t,'Content-Type':'application/json'},body:JSON.stringify({files:{'materials.json':{content:JSON.stringify(txtData)}}})}).catch(function(){})
-}
-
-function renderMaterials(){var c=byId('mat-list'),h='';
-var done=materials.filter(function(m){var a=activities.find(function(x){return x.id===m.actId});return !a||getDisplayStatus(a)==='done'});
-if(isAdmin())h+='<button class=\"btn btn-primary btn-small\" style=\"margin-bottom:12px\" onclick=\"openAddMaterial()\">+ 添加活动素材</button>';
-if(!done.length){c.innerHTML=h+'<p style=\"font-size:13px;color:var(--text-secondary);padding:20px 0\">暂无已结束的活动素材</p>';return}
-done.slice().reverse().forEach(function(m,i){var idx=materials.indexOf(m);h+='<div class=\"card clickable\" onclick=\"openMaterial('+idx+')\"><h3>'+e(m.title)+'</h3><p>'+e(m.date||'')+' · '+e(m.cat||'')+'</p><div class=\"meta\">';if(m.time&&m.time!==m.date)h+='<span>&#128197; '+e(m.time)+'</span>';if(m.addr)h+='<span>&#128205; '+e(m.addr)+'</span>';if(m.cost)h+='<span>&#128176; '+e(m.cost)+'</span>';if(m.attendance)h+='<span>&#128101; '+e(m.attendance)+'家</span>';if(m.poster)h+='<span>&#127912; 海报</span>';if(m.photos&&m.photos.length)h+='<span>&#128247; '+m.photos.length+' 张</span>';h+='</div></div>'});c.innerHTML=h}
-function openAddMaterial(){var title=prompt('活动名称：');if(!title)return;var id=prompt('活动ID（如 CLOUDMEETING...）：');if(!id)id='MANUAL'+Date.now();materials.push({actId:id,title:title,date:'',cat:'',time:'',addr:'',cost:'',costImg:'',invoiceImg:'',attendance:'',poster:'',photos:[]});saveMaterials();renderMaterials();openMaterial(materials.length-1)}
-
-function openMaterial(idx){var m=materials[idx];if(!m)return;byId('mat-title').textContent=m.title;
-var h='<div class=\"info-row\"><span class=\"info-label\">活动ID</span><span class=\"info-value\">'+m.actId+'</span></div>';
-if(m.poster)h+='<div class=\"section-title\">&#127912; 宣传海报</div><img id=\"mat-poster-img\" src=\"\" style=\"max-width:100%;max-height:300px;border-radius:6px;border:1px solid var(--border)\">';
-if(m.costImg)h+='<div class=\"section-title\" style=\"margin-top:12px\">&#128200; 费用组成</div><img id=\"mat-cost-img\" src=\"\" style=\"max-width:100%;max-height:300px;border-radius:6px;border:1px solid var(--border)\">';
-if(m.invoiceImg)h+='<div class=\"section-title\" style=\"margin-top:12px\">&#128196; 发票</div><img id=\"mat-inv-img\" src=\"\" style=\"max-width:100%;max-height:300px;border-radius:6px;border:1px solid var(--border)\">';
-if(m.photos&&m.photos.length){h+='<div class=\"section-title\" style=\"margin-top:12px\">&#128247; 现场照片 ('+m.photos.length+'张)</div><div style=\"display:flex;flex-wrap:wrap;gap:8px\" id=\"mat-photos-wrap\"></div>';}
-if(isAdmin()){h+='<div style=\"margin-top:16px;padding-top:12px;border-top:1px solid var(--border)\">';
-h+='<div class=\"edit-row\"><label>活动名称</label><input type=\"text\" id=\"me-title\" value=\"'+e(m.title||'' )+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
-h+='<div class=\"edit-row\"><label>活动ID</label><input type=\"text\" id=\"me-id\" value=\"'+e(String(m.actId||''))+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
-h+='<div class=\"edit-row\"><label>活动时间</label><input type=\"text\" id=\"me-time\" value=\"'+e(m.time||'' )+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
-h+='<div class=\"edit-row\"><label>活动地址</label><input type=\"text\" id=\"me-addr\" value=\"'+e(m.addr||'' )+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
-h+='<div class=\"edit-row\"><label>实际到场家数</label><input type=\"text\" id=\"me-att\" value=\"'+e(m.attendance||'' )+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
-h+='<div class=\"edit-row\"><label>实际费用（元）</label><input type=\"text\" id=\"me-cost\" value=\"'+e(m.cost||'' )+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
-h+='<div class=\"edit-row\"><label>上传宣传海报</label><input type=\"file\" id=\"me-poster-file\" accept=\".jpg,.jpeg,.png,.webp\" style=\"display:none\" onchange=\"var f=this.files[0];if(!f)return;saveFile(\'mat_post_'+idx+'\',f,function(){var m=materials['+idx+'];if(m){m.poster=1;localStorage.setItem(\'qx_mats\',JSON.stringify(materials));alert(\'海报已上传\')}})\"><button class=\"btn btn-primary btn-small\" onclick=\"byId(\'me-poster-file\').click()\">选择海报</button>'+ (m.poster?' <span style=\"font-size:12px;color:#5B9E6F\">&#10003; 已上传</span>':'')+'</div>';
-h+='<div class=\"edit-row\"><label>上传费用组成图</label><input type=\"file\" id=\"me-cost-file\" accept=\".jpg,.jpeg,.png,.webp\" style=\"display:none\" onchange=\"var f=this.files[0];if(!f)return;saveFile(\'mat_cost_'+idx+'\',f,function(){var m=materials['+idx+'];if(m){m.costImg=1;localStorage.setItem(\'qx_mats\',JSON.stringify(materials));alert(\'费用图已上传\')}})\"><button class=\"btn btn-primary btn-small\" onclick=\"byId(\'me-cost-file\').click()\">选择图片</button>'+ (m.costImg?' <span style=\"font-size:12px;color:#5B9E6F\">&#10003; 已上传</span>':'')+'</div>';
-h+='<div class=\"edit-row\"><label>上传发票</label><input type=\"file\" id=\"me-invoice-file\" accept=\".jpg,.jpeg,.png,.webp\" style=\"display:none\" onchange=\"var f=this.files[0];if(!f)return;saveFile(\'mat_inv_'+idx+'\',f,function(){var m=materials['+idx+'];if(m){m.invoiceImg=1;localStorage.setItem(\'qx_mats\',JSON.stringify(materials));alert(\'发票已上传\')}})\"><button class=\"btn btn-primary btn-small\" onclick=\"byId(\'me-invoice-file\').click()\">选择图片</button>'+ (m.invoiceImg?' <span style=\"font-size:12px;color:#5B9E6F\">&#10003; 已上传</span>':'')+'</div>';
-h+='<div class=\"edit-row\"><label>添加现场照片</label><input type=\"file\" id=\"me-photos-file\" accept=\".jpg,.jpeg,.png,.webp\" style=\"display:none\" multiple onchange=\"var fs=this.files;if(!fs.length)return;var done=0,t=fs.length;for(var i=0;i<fs.length;i++){(function(i){saveFile(\'mat_ph_'+idx+'_'+i+'\',fs[i],function(){var m=materials['+idx+'];if(m){m.photos=(m.photos||[]);m.photos.push(1);localStorage.setItem(\'qx_mats\',JSON.stringify(materials))}done++;if(done===t)alert(\'已上传 \'+t+\' 张照片\')})})(i)}\"><button class=\"btn btn-primary btn-small\" onclick=\"byId(\'me-photos-file\').click()\">选择照片</button></div>';
-h+='<div style=\"display:flex;gap:8px;margin-top:12px\"><button class=\"btn btn-primary btn-small\" onclick=\"saveMatEdit('+idx+')\">保存</button><button class=\"btn btn-outline btn-small\" onclick=\"byId(\'mat-modal\').classList.remove(\'open\')\">取消</button></div></div>'}
-byId('mat-body').innerHTML=h;byId('mat-modal').classList.add('open');
-// Load images from IndexedDB
-if(m.poster)getFile('mat_post_'+idx,function(blob){if(blob){var el=byId('mat-poster-img');if(el)el.src=URL.createObjectURL(blob)}});
-if(m.costImg)getFile('mat_cost_'+idx,function(blob){if(blob){var el=byId('mat-cost-img');if(el)el.src=URL.createObjectURL(blob)}});
-if(m.invoiceImg)getFile('mat_inv_'+idx,function(blob){if(blob){var el=byId('mat-inv-img');if(el)el.src=URL.createObjectURL(blob)}});
-if(m.photos&&m.photos.length){for(var pi=0;pi<m.photos.length;pi++){(function(i){getFile('mat_ph_'+idx+'_'+i,function(blob){if(blob){var wrap=byId('mat-photos-wrap');if(wrap){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.target='_blank';var img=document.createElement('img');img.src=a.href;img.style='width:120px;height:90px;object-fit:cover;border-radius:4px;border:1px solid var(--border)';a.appendChild(img);wrap.appendChild(a)}}})})(pi)}}}
-
-function uploadMatField(field,idx,input){var file=input.files[0];if(!file)return;var label=field==='poster'?'海报已上传':field==='costImg'?'费用图已上传':'发票已上传';var reader=new FileReader();reader.onload=function(e){var m=materials[idx];if(m){m[field]=e.target.result;saveMaterials();alert(label)}else{alert('素材未找到')}};reader.readAsDataURL(file)}
-function uploadMatPhotos(idx,input){var files=input.files;if(!files.length)return;var done=0,total=files.length;for(var i=0;i<files.length;i++){(function(i){var file=files[i];var reader=new FileReader();reader.onload=function(e){var m=materials[idx];if(m){m.photos.push(e.target.result);saveMaterials()}done++;if(done===total)alert('已上传 '+total+' 张照片')};reader.readAsDataURL(file)})(i)}}
-function saveMatEdit(idx){var m=materials[idx];if(!m)return;m.title=byId('me-title').value.trim();m.actId=byId('me-id').value.trim();m.time=byId('me-time').value.trim();m.addr=byId('me-addr').value.trim();m.attendance=byId('me-att').value.trim();m.cost=byId('me-cost').value.trim();saveMaterials();byId('mat-modal').classList.remove('open');renderMaterials()}
-
 // ===== INIT =====
 (function init(){
 var u=getU();
@@ -1900,7 +1845,6 @@ function promptToken(){
 byId('detail-modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
 byId('add-modal').addEventListener('click',function(e){if(e.target===this)closeAddModal()});
 byId('case-modal').addEventListener('click',function(e){if(e.target===this)byId('case-modal').classList.remove('open')});
-byId('mat-modal').addEventListener('click',function(e){if(e.target===this)byId('mat-modal').classList.remove('open')});
 byId('ss-modal').addEventListener('click',function(e){if(e.target===this)byId('ss-modal').classList.remove('open')});
 </script>
 </body>
