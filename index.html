@@ -1774,8 +1774,9 @@ function doRegUpload(file){
     var sheet=wb.Sheets[wb.SheetNames[0]];
     var rows=XLSX.utils.sheet_to_json(sheet,{header:1});
     if(rows.length<2){alert('表格为空');return}
-    var hdr=rows[0];var idxName=hdr.indexOf('邀约销售名称'),idxTeam=hdr.indexOf('邀约销售所属主管组');
-    if(idxName<0||idxTeam<0){alert('未找到"邀约销售名称"或"邀约销售所属主管组"列');return}
+    var hdr=rows[0];var idxName=-1,idxTeam=-1;
+    for(var hi=0;hi<hdr.length;hi++){var h=String(hdr[hi]||'');if(h.indexOf('邀约销售')!==-1&&h.indexOf('称')!==-1)idxName=hi;if(h.indexOf('邀约销售')!==-1&&(h.indexOf('主管')!==-1||h.indexOf('团队')!==-1))idxTeam=hi}
+    if(idxName<0||idxTeam<0){alert('表头未匹配。需包含列：邀约销售名称、邀约销售所属主管组');return}
     regData=[];
     for(var i=1;i<rows.length;i++){
       var r=rows[i];if(!r[idxName])continue;
