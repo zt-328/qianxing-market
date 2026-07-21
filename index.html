@@ -1408,7 +1408,7 @@ var DEFAULT_CASES = [
 
 function renderCases(industry){
 var c=byId('case-list'),h='';
-if(isAdmin())h+='<button class="btn btn-primary btn-small" style="margin-bottom:12px" onclick="openAddCase()">+ 添加案例</button>';
+h+='<button class="btn btn-primary btn-small" style="margin-bottom:12px" onclick="openAddCase()">+ 添加案例</button>';
 if(!cases.length){c.innerHTML=h+'<p style="font-size:13px;color:var(--text-secondary);padding:20px 0">暂无案例</p>';return}
 var filtered=industry?cases.filter(function(x){return x.ind===industry}):cases;
 if(filtered.length===0){c.innerHTML=h+'<p style="font-size:13px;color:var(--text-secondary);padding:20px 0">暂无该行业案例</p>';return}
@@ -1428,16 +1428,13 @@ var h='<span class="tag" style="margin-bottom:8px">'+e(x.ind)+'</span><span clas
 h+='<div class="info-row" style="margin-top:16px"><span class="info-label">年销</span><span class="info-value" style="color:var(--primary);font-weight:500">'+e(x.rev)+'</span></div>';
 h+='<div style="margin-top:12px;font-size:14px;line-height:2;color:var(--text)">'+e(x.story)+'</div>';
 if(x.url)h+='<div style="margin-top:12px"><a href="'+e(x.url)+'" target="_blank" class="btn btn-outline btn-small">查看店铺</a></div>';
-if(isAdmin()){
 h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
-h+='<div class="edit-row"><label>公司名称</label><input type="text" id="ce-name" value="'+e(x.name||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
 h+='<div class="edit-row"><label>行业</label><input type="text" id="ce-ind" value="'+e(x.ind||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
 h+='<div class="edit-row"><label>类型</label><input type="text" id="ce-type" value="'+e(x.type||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
 h+='<div class="edit-row"><label>年销</label><input type="text" id="ce-rev" value="'+e(x.rev||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
 h+='<div class="edit-row"><label>店铺链接</label><input type="text" id="ce-url" value="'+e(x.url||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
 h+='<div class="edit-row"><label>详细故事</label><textarea id="ce-story" rows="4" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;resize:vertical">'+e(x.story||'')+'</textarea></div>';
 h+='<div style="display:flex;gap:8px"><button class="btn btn-primary btn-small" onclick="saveCaseEdit('+idx+')">保存</button><button class="btn btn-outline btn-small" onclick="byId(\'case-modal\').classList.remove(\'open\')">取消</button><button class="btn btn-outline btn-small" style="margin-left:auto;color:#c04040;border-color:#c04040" onclick="delCase('+idx+')">删除</button></div></div>';
-}
 byId('case-body').innerHTML=h;byId('case-modal').classList.add('open');
 }
 
