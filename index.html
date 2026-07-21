@@ -286,7 +286,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <div class="card-grid" id="sp-list"></div>
 <div class="modal-overlay" id="sp-modal"><div class="modal"><div class="modal-header"><h2 id="sp-title"></h2><button class="modal-close" onclick="byId('sp-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="sp-body"></div></div></div>
 </section>
-<section class="page-section" id="page-materials"><div class="placeholder"><div class="icon-large">&#128193;</div><h2>活动素材</h2><p>待内容填充</p></div></section>
+<section class="page-section" id="page-materials">
+<h1 class="page-title">活动素材</h1>
+<p class="page-desc">活动结束后自动生成卡片，点击上传照片和课件</p>
+<div class="card-grid" id="mat-list"></div>
+<div class="modal-overlay" id="mat-modal"><div class="modal"><div class="modal-header"><h2 id="mat-title"></h2><button class="modal-close" onclick="byId('mat-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="mat-body"></div></div></div>
+</section>
 <section class="page-section" id="page-star-intro">
 <h1 class="page-title">销售星介绍 &amp; 加入流程</h1>
 <p class="page-desc">以「阿里巴巴国际站客户经理」身份在社交媒体平台建立个人IP，通过内容获客拓展业务</p>
@@ -1025,6 +1030,7 @@ if(id==='schedule'){scheduleView='calendar';renderSchedule();}
 if(id==='cases'){loadCases(function(){initCaseFilters();renderCases()})}
 if(id==='speakers'){loadSpeakers(function(){initSpeakerFilters();renderSpeakers()})}
 if(id==='star-customers'){loadSSCustomers(function(){renderSSCustomers()})}
+if(id==='materials'){loadMaterials(function(){renderMaterials()})}
 if(id==='dashboard'){loadRegData(function(){})}
 if(id==='followup'){loadCustomers(function(){byId('fu-search').value=sessionStorage.getItem('qx_fuSearch')||'';renderFollowup()})}
 if(id==='activity-types')renderTypePage();
@@ -1817,6 +1823,15 @@ function renderRegTop(){
   document.querySelector('#page-dashboard .db-alert').innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px"><h3 style="font-size:16px;margin-bottom:6px">&#128197; 7月22日 秦商出海沙龙</h3><div style="display:flex;gap:8px;align-items:center"><span style="font-size:12px;color:var(--text-secondary)">数据截至：<span id="reg-updated-text">'+byId('reg-updated').textContent+'</span></span><input type="file" id="reg-file" accept=".xlsx,.xls" onchange="handleRegUpload(this)" style="display:none"><button class="btn btn-primary btn-small" onclick="byId(\'reg-file\').click()">&#128229; 上传报名Excel</button></div></div>'+html;
 }
 
+// ===== MATERIALS =====
+var materials=[];var MAT_URL='https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/materials.json';
+function loadMaterials(cb){var s=localStorage.getItem('qx_mats');if(s){try{materials=JSON.parse(s)}catch(e){}}activities.forEach(function(a){var f=materials.find(function(m){return m.actId===a.id});if(!f){materials.push({actId:a.id,title:a.title,date:a.date,cat:a.cat,photos:[],ppt:'',files:[]})}});saveMaterials();cb();fetch(MAT_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){materials=d;localStorage.setItem('qx_mats',JSON.stringify(d));renderMaterials()}).catch(function(){})}
+function saveMaterials(){materials=materials.filter(function(m){return activities.find(function(a){return a.id===m.actId})});localStorage.setItem('qx_mats',JSON.stringify(materials));var t=getGistToken();if(!t)return;fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+t,'Content-Type':'application/json'},body:JSON.stringify({files:{'materials.json':{content:JSON.stringify(materials)}}})}).catch(function(){})}
+function renderMaterials(){var c=byId('mat-list'),h='';if(!materials.length){c.innerHTML='<p style=\"font-size:13px;color:var(--text-secondary);padding:20px 0\">暂无活动素材，活动卡片将在活动创建后自动生成</p>';return}materials.slice().reverse().forEach(function(m,i){var idx=materials.indexOf(m);h+='<div class=\"card clickable\" onclick=\"openMaterial('+idx+')\"><h3>'+e(m.title)+'</h3><p>'+e(m.date||'')+' · '+e(m.cat||'')+'</p><div class=\"meta\">';if(m.photos&&m.photos.length)h+='<span>&#128247; '+m.photos.length+' 张</span>';if(m.ppt)h+='<span>&#128196; 课件</span>';h+='</div></div>'});c.innerHTML=h}
+function openMaterial(idx){var m=materials[idx];if(!m)return;byId('mat-title').textContent=m.title;var h='<div class=\"info-row\"><span class=\"info-label\">日期</span><span class=\"info-value\">'+e(m.date||'')+'</span></div><div class=\"info-row\"><span class=\"info-label\">类别</span><span class=\"info-value\">'+e(m.cat||'')+'</span></div>';if(m.photos&&m.photos.length){h+='<div class=\"section-title\">&#128247; 照片 ('+m.photos.length+'张)</div><div style=\"display:flex;flex-wrap:wrap;gap:8px\">';m.photos.forEach(function(p,i){h+='<a href=\"'+e(p)+'\" target=\"_blank\"><img src=\"'+e(p)+'\" style=\"width:120px;height:90px;object-fit:cover;border-radius:4px;border:1px solid var(--border)\"></a>'});h+='</div>'}if(m.ppt)h+='<div class=\"section-title\" style=\"margin-top:16px\">&#128196; 课件</div><a href=\"'+e(m.ppt)+'\" target=\"_blank\" class=\"btn btn-primary\">下载课件</a>';if(isAdmin()){h+='<div style=\"margin-top:16px;padding-top:12px;border-top:1px solid var(--border)\"><div class=\"edit-row\"><label>课件链接（PPT/PDF链接）</label><input type=\"text\" id=\"me-ppt\" value=\"'+e(m.ppt||'')+'\" placeholder=\"粘贴课件链接\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div><div class=\"edit-row\"><label>添加照片</label><input type=\"file\" id=\"me-photo-file\" accept=\".jpg,.jpeg,.png,.webp\" onchange=\"uploadMatPhoto('+idx+',this)\" style=\"display:none\"><button class=\"btn btn-primary btn-small\" onclick=\"byId(\'me-photo-file\').click()\">选择照片上传</button><span id=\"me-photo-name\" style=\"font-size:12px;color:var(--text-secondary);margin-left:8px\"></span></div><div style=\"display:flex;gap:8px;margin-top:12px\"><button class=\"btn btn-primary btn-small\" onclick=\"saveMatEdit('+idx+')\">保存</button><button class=\"btn btn-outline btn-small\" onclick=\"byId(\'mat-modal\').classList.remove(\'open\')\">取消</button></div></div>'}byId('mat-body').innerHTML=h;byId('mat-modal').classList.add('open')}
+function uploadMatPhoto(idx,input){var file=input.files[0];if(!file){alert('请选择图片');return}byId('me-photo-name').textContent=file.name;var reader=new FileReader();reader.onload=function(e){var img=new Image();img.onload=function(){var c=document.createElement('canvas');var maxW=800,maxH=600,ratio=Math.min(maxW/img.width,maxH/img.height);c.width=img.width*ratio;c.height=img.height*ratio;c.getContext('2d').drawImage(img,0,0,c.width,c.height);var m=materials[idx];if(m){m.photos.push(c.toDataURL('image/jpeg',0.7));saveMaterials()}openMaterial(idx)};img.src=e.target.result};reader.readAsDataURL(file)}
+function saveMatEdit(idx){var m=materials[idx];if(!m)return;m.ppt=byId('me-ppt').value.trim();saveMaterials();byId('mat-modal').classList.remove('open');renderMaterials()}
+
 // ===== INIT =====
 (function init(){
 var u=getU();
@@ -1843,6 +1858,7 @@ function promptToken(){
 byId('detail-modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
 byId('add-modal').addEventListener('click',function(e){if(e.target===this)closeAddModal()});
 byId('case-modal').addEventListener('click',function(e){if(e.target===this)byId('case-modal').classList.remove('open')});
+byId('mat-modal').addEventListener('click',function(e){if(e.target===this)byId('mat-modal').classList.remove('open')});
 byId('ss-modal').addEventListener('click',function(e){if(e.target===this)byId('ss-modal').classList.remove('open')});
 </script>
 </body>
