@@ -915,6 +915,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <div style="background:var(--card-bg);border-radius:10px;overflow-x:auto;box-shadow:var(--shadow);border:1px solid var(--border)">
 <table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:var(--bg)"><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);font-weight:600;white-space:nowrap">序号</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">客户经理</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">签约时间</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">公司名称</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">方案</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">营收(万)</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">产品</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">开发方式</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">参加活动</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap" id="sn-admin-col"></th></tr></thead><tbody id="sn-list"></tbody></table>
 </div>
+
+<div class="section-title" style="margin-top:32px">&#128200; 数据分析</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+<div style="background:var(--card-bg);border-radius:10px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border)">
+<h4 style="font-size:14px;color:var(--text);margin-bottom:12px;text-align:center">客户经理签约金额 Top10（万元）</h4>
+<canvas id="sn-bar" style="max-height:280px"></canvas>
+</div>
+<div style="background:var(--card-bg);border-radius:10px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border)">
+<h4 style="font-size:14px;color:var(--text);margin-bottom:12px;text-align:center">开发途径分布</h4>
+<canvas id="sn-channel" style="max-height:280px"></canvas>
+</div>
+<div style="background:var(--card-bg);border-radius:10px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border)">
+<h4 style="font-size:14px;color:var(--text);margin-bottom:12px;text-align:center">产品品类分布</h4>
+<canvas id="sn-product" style="max-height:280px"></canvas>
+</div>
+<div style="background:var(--card-bg);border-radius:10px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border)">
+<h4 style="font-size:14px;color:var(--text);margin-bottom:12px;text-align:center">金品占比 / 销售星贡献</h4>
+<div style="display:flex;gap:40px;justify-content:center;align-items:center;padding:20px">
+<div style="text-align:center"><div style="font-size:36px;font-weight:700;color:var(--primary)">12</div><div style="font-size:12px;color:var(--text-secondary)">金品客户</div></div>
+<div style="text-align:center"><div style="font-size:36px;font-weight:700;color:#3D6F94">40</div><div style="font-size:12px;color:var(--text-secondary)">出口通客户</div></div>
+<div style="text-align:center"><div style="font-size:36px;font-weight:700;color:#5B9E6F">3</div><div style="font-size:12px;color:var(--text-secondary)">销售星获客</div></div>
+<div style="text-align:center"><div style="font-size:36px;font-weight:700;color:#E8A838">5.73</div><div style="font-size:12px;color:var(--text-secondary)">人均签约(万)</div></div>
+</div>
+</div>
+</div>
 </section>
 <section class="page-section" id="page-guide">
 <h1 class="page-title">使用说明</h1>
@@ -1014,6 +1040,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 // ===== LAZY LOAD XLSX =====
 var xlsxReady=false;
@@ -1934,6 +1961,7 @@ function renderSigning(){
     signingData.forEach(function(r,i){h+='<tr><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+(i+1)+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border);white-space:nowrap\">'+e(r.sales||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border);white-space:nowrap\">'+e(r.date||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.company||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border);white-space:nowrap\">'+e(r.plan||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border);color:var(--primary);font-weight:500;white-space:nowrap\">'+e(r.revenue||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.product||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border);white-space:nowrap\">'+e(r.method||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.activity||'')+'</td>'+(isAdmin()?'<td style=\"padding:8px;border-bottom:1px solid var(--border);white-space:nowrap\"><button class=\"btn btn-outline btn-small\" onclick=\"editSigning('+i+')\" style=\"font-size:11px;padding:2px 6px\">编辑</button> <button class=\"btn btn-outline btn-small\" onclick=\"delSigning('+i+')\" style=\"font-size:11px;padding:2px 6px;color:#c04040\">删除</button></td>':'')+'</tr>'});
   if(!signingData.length)h='<tr><td colspan=\"8\" style=\"padding:20px;text-align:center;color:var(--text-secondary)\">暂无新签记录</td></tr>';
   byId('sn-list').innerHTML=h;
+  setTimeout(renderSigningCharts,500);
 }
 
 function openAddSigning(){
@@ -1970,6 +1998,24 @@ function editSigning(idx){
 function saveEditSigning(idx){var r=signingData[idx];if(!r)return;r.sales=byId('sne-sales').value.trim();r.date=byId('sne-date').value.trim();r.company=byId('sne-company').value.trim();r.plan=byId('sne-plan').value.trim();r.revenue=byId('sne-revenue').value.trim();r.product=byId('sne-product').value.trim();r.method=byId('sne-method').value.trim();r.activity=byId('sne-activity').value.trim();saveSigning();byId('sn-modal').classList.remove('open');renderSigning()}
 
 function delSigning(idx){if(!confirm('确定删除？'))return;signingData.splice(idx,1);saveSigning();renderSigning()}
+
+function renderSigningCharts(){
+  if(typeof Chart==='undefined'){setTimeout(renderSigningCharts,300);return}
+  // Bar chart - top sales
+  var salesRev={};signingData.forEach(function(r){var s=r.sales,rev=parseFloat(r.revenue)||0;salesRev[s]=(salesRev[s]||0)+rev});
+  var topSales=Object.entries(salesRev).sort(function(a,b){return b[1]-a[1]}).slice(0,10);
+  if(document.getElementById('sn-bar')){new Chart(document.getElementById('sn-bar'),{type:'bar',data:{labels:topSales.map(function(x){return x[0]}),datasets:[{label:'营收(万)',data:topSales.map(function(x){return x[1]}),backgroundColor:'#FF6A00'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}})}
+  // Channel distribution
+  var channels={};signingData.forEach(function(r){var c=r.method||'未知';channels[c]=(channels[c]||0)+1});
+  var chColors=['#FF6A00','#3D6F94','#5B9E6F','#E8A838','#836687','#C56443','#6F8854','#C68E31','#A0A0A0','#4877B5','#D495B0'];
+  if(document.getElementById('sn-channel')){new Chart(document.getElementById('sn-channel'),{type:'doughnut',data:{labels:Object.keys(channels),datasets:[{data:Object.values(channels),backgroundColor:chColors}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}})}
+  // Product distribution
+  var products={};signingData.forEach(function(r){var p=r.product||'其他';products[p]=(products[p]||0)+1});
+  var topProd=Object.entries(products).sort(function(a,b){return b[1]-a[1]}).slice(0,8);
+  var other=Object.entries(products).slice(8).reduce(function(s,x){return s+x[1]},0);
+  if(other){topProd.push(['其他',other])}
+  if(document.getElementById('sn-product')){new Chart(document.getElementById('sn-product'),{type:'doughnut',data:{labels:topProd.map(function(x){return x[0]}),datasets:[{data:topProd.map(function(x){return x[1]}),backgroundColor:chColors}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}})}
+}
 
 function handleSNUpload(input){
   var file=input.files[0];if(!file)return;
