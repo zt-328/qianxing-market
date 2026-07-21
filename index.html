@@ -734,6 +734,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <p style="font-size:13px;color:var(--primary);font-weight:600;text-align:center">工具最高境界：让客户在沙龙现场看到自己的产品出现在AW选品报告里——这一刻胜过100句话术。</p>
 </div>
 </section>
+<section class="page-section" id="page-star-customers">
+<h1 class="page-title">销售星客户名单</h1>
+<p class="page-desc">2026年4-6月销售星客户跟进 · 共 <span id="ss-total">0</span> 条记录</p>
+<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+<input type="text" id="ss-search" placeholder="搜索公司名称或客户姓名..." style="flex:1;min-width:200px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" oninput="renderSSCustomers()">
+<input type="file" id="ss-file" accept=".xlsx,.xls" onchange="handleSSUpload(this)" style="display:none">
+<span id="ss-import-btn"></span>
+<button class="btn btn-outline btn-small" onclick="downloadSSExcel()">&#128228; 导出Excel</button>
+</div>
+<div class="card-grid" id="ss-list"></div>
+</section>
 <section class="page-section" id="page-dashboard">
 <h1 class="page-title">活动数据看板</h1>
 <p class="page-desc">Q3 活动到场数据追踪 · 最新活动报名进展</p>
@@ -960,7 +971,7 @@ var scheduleView = 'calendar'; // 'calendar' or 'inviting'
 var NAV_ITEMS = [
 {group:'活动管理',items:[{id:'schedule',icon:'&#128197;',label:'活动排期'},{id:'activity-types',icon:'&#128204;',label:'活动类型'},{id:'sop',icon:'&#128221;',label:'活动邀约SOP'},{id:'scripts',icon:'&#128172;',label:'邀约话术库'}]},
 {group:'赋能资源',items:[{id:'cases',icon:'&#11088;',label:'商家案例'},{id:'speakers',icon:'&#128100;',label:'讲师库'},{id:'materials',icon:'&#128193;',label:'活动素材'}]},
-{group:'销售星 · 抖音获客',items:[{id:'star-intro',icon:'&#127775;',label:'销售星介绍 & 加入流程'},{id:'star-learn',icon:'&#128218;',label:'销售星学习资料'},{id:'star-sop',icon:'&#128203;',label:'销售星工作SOP'}]},
+{group:'销售星 · 抖音获客',items:[{id:'star-intro',icon:'&#127775;',label:'销售星介绍 & 加入流程'},{id:'star-learn',icon:'&#128218;',label:'销售星学习资料'},{id:'star-sop',icon:'&#128203;',label:'销售星工作SOP'},{id:'star-customers',icon:'&#128101;',label:'销售星客户名单'}]},
 {group:'数据与激励',items:[{id:'dashboard',icon:'&#128200;',label:'活动数据看板'},{id:'followup',icon:'&#128101;',label:'客户跟进'},{id:'incentive',icon:'&#127942;',label:'激励政策'},{id:'reports',icon:'&#127881;',label:'战报/捷报'}]},
 {group:'业绩追踪',items:[{id:'signing',icon:'&#128176;',label:'新签明细'}]}
 ];
@@ -1012,6 +1023,7 @@ var t=byId('page-'+id);if(t)t.classList.add('active');
 if(id==='schedule'){scheduleView='calendar';renderSchedule();}
 if(id==='cases'){loadCases(function(){initCaseFilters();renderCases()})}
 if(id==='speakers'){loadSpeakers(function(){initSpeakerFilters();renderSpeakers()})}
+if(id==='star-customers'){loadSSCustomers(function(){renderSSCustomers()})}
 if(id==='dashboard'){loadRegData(function(){})}
 if(id==='followup'){loadCustomers(function(){byId('fu-search').value=sessionStorage.getItem('qx_fuSearch')||'';renderFollowup()})}
 if(id==='activity-types')renderTypePage();
@@ -1460,7 +1472,82 @@ function openFuDetail(company){
   byId('fu-body').innerHTML=h;byId('fu-modal').classList.add('open');
 }
 
-// ===== SPEAKERS =====
+// ===== SALES STAR CUSTOMERS =====
+var ssData=[],ssSearch='';
+var SS_URL='https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/salesstar_customers.json';
+
+function loadSSCustomers(cb){
+  var s=localStorage.getItem('qx_sscust');if(s){try{ssData=JSON.parse(s).records||[]}catch(e){}}
+  cb();
+  fetch(SS_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){
+    ssData=d.records||[];localStorage.setItem('qx_sscust',JSON.stringify(d));renderSSCustomers();
+  }).catch(function(){});
+}
+
+function saveSSCustomers(){
+  localStorage.setItem('qx_sscust',JSON.stringify({records:ssData,total:ssData.length}));
+  var token=getGistToken();if(!token)return;
+  fetch('https://api.github.com/gists/'+GIST_ID,{
+    method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({files:{'salesstar_customers.json':{content:JSON.stringify({records:ssData,total:ssData.length})}}})
+  }).catch(function(){alert('云端保存失败')});
+}
+
+function renderSSCustomers(){
+  byId('ss-import-btn').innerHTML=isAdmin()?'<button class="btn btn-primary btn-small" onclick="byId(\'ss-file\').click()">&#128229; 导入Excel</button>':'';
+  ssSearch=byId('ss-search').value.trim().toLowerCase();
+  var filtered=ssSearch?ssData.filter(function(r){return(r.公司名称||'').toLowerCase().indexOf(ssSearch)!==-1||(r.姓名||'').toLowerCase().indexOf(ssSearch)!==-1}):ssData;
+  byId('ss-total').textContent=filtered.length;
+  var page=filtered.slice(0,50),c=byId('ss-list'),h='';
+  page.forEach(function(r){
+    h+='<div class="card"><h3>'+e(r.姓名||'')+' <span style="font-size:12px;color:var(--text-secondary);font-weight:400">'+e(r.电话||'')+'</span></h3>';
+    h+='<p>'+e(r.公司名称||'个人')+'</p>';
+    h+='<div class="meta"><span>'+e(r.线索来源||r.source||'')+'</span><span>销售：'+e(r.跟进销售||r.客户经理||'')+'</span><span>'+e(r.sheet||'')+'</span>';
+    if(r.是否到场&&r.是否到场!=='否')h+='<span style="color:#5B9E6F">&#10003; 已到场</span>';
+    if(r.是否有意向&&r.是否有意向!=='否')h+='<span style="color:var(--primary)">&#9733; 有意向</span>';
+    h+='</div></div>';
+  });
+  c.innerHTML=h;
+}
+
+function handleSSUpload(input){
+  var file=input.files[0];if(!file)return;
+  ensureXLSX(function(){doSSUpload(file)});}
+function doSSUpload(file){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var wb=XLSX.read(e.target.result,{type:'array'});
+    var allNew=[];
+    for(var si=0;si<wb.SheetNames.length;si++){
+      var sn=wb.SheetNames[si];if(sn==='说明文档')continue;
+      var rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1});
+      if(rows.length<2)continue;
+      var hdr=rows[0];var nameIdx=-1,phoneIdx=-1;
+      for(var i=0;i<hdr.length;i++){var h=String(hdr[i]||'');if(h.indexOf('姓名')!==-1)nameIdx=i;if(h.indexOf('电话')!==-1)phoneIdx=i}
+      if(nameIdx<0){hdr=rows[1];nameIdx=phoneIdx=-1;for(var i=0;i<hdr.length;i++){var h=String(hdr[i]||'');if(h.indexOf('姓名')!==-1)nameIdx=i}}
+      if(nameIdx<0)continue;
+      for(var ri=nameIdx>=0?1:2;ri<rows.length;ri++){
+        var r=rows[ri];if(!r||!r[nameIdx]||!String(r[nameIdx]).trim())continue;
+        var rec={};for(var ci=0;ci<hdr.length&&ci<r.length;ci++){var key=String(hdr[ci]||'').trim();rec[key]=String(r[ci]||'').trim()}
+        rec.sheet=sn;allNew.push(rec);
+      }
+    }
+    ssData=ssData.concat(allNew);saveSSCustomers();renderSSCustomers();
+    alert('导入完成，新增 '+allNew.length+' 条记录');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function downloadSSExcel(){
+  ensureXLSX(function(){doDownloadSS()});}
+function doDownloadSS(){
+  var filtered=ssSearch?ssData.filter(function(r){return(r.公司名称||'').toLowerCase().indexOf(ssSearch)!==-1||(r.姓名||'').toLowerCase().indexOf(ssSearch)!==-1}):ssData;
+  var rows=[['姓名','电话','公司名称','来源','跟进销售','回访结果','是否到场','是否有意向','活动']];
+  filtered.forEach(function(r){rows.push([r.姓名||'',r.电话||'',r.公司名称||'',r.线索来源||r.source||'',r.跟进销售||r.客户经理||'',r.回访结果||'',r.是否到场||'',r.是否有意向||'',r.sheet||''])});
+  var ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:10},{wch:18},{wch:30},{wch:8},{wch:10},{wch:20},{wch:8},{wch:8},{wch:12}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'销售星客户名单');
+  XLSX.writeFile(wb,'销售星客户名单.xlsx');
+}
 var SPEAKERS_URL = 'https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/speakers.json';
 var speakers = [];
 
