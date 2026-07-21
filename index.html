@@ -2011,9 +2011,7 @@ function renderSigningCharts(){
   var chColors=['#FF6A00','#3D6F94','#5B9E6F','#E8A838','#836687','#C56443','#6F8854','#C68E31','#A0A0A0','#4877B5'];
   if(document.getElementById('sn-channel')){new Chart(document.getElementById('sn-channel'),{type:'doughnut',data:{labels:Object.keys(channels),datasets:[{data:Object.values(channels),backgroundColor:chColors}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}})}
   var products={};hist.forEach(function(r){var p=r['产品']||'其他';products[p]=(products[p]||0)+1});
-  var topProd=Object.entries(products).sort(function(a,b){return b[1]-a[1]}).slice(0,8);
-  var other=Object.entries(products).slice(8).reduce(function(s,x){return s+x[1]},0);
-  if(other)topProd.push(['其他',other]);
+  var topProd=Object.entries(products).sort(function(a,b){return b[1]-a[1]});
   if(document.getElementById('sn-product')){new Chart(document.getElementById('sn-product'),{type:'doughnut',data:{labels:topProd.map(function(x){return x[0]}),datasets:[{data:topProd.map(function(x){return x[1]}),backgroundColor:chColors}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}})}
   // KPI update
   var gold=hist.filter(function(r){return r['是否金品']==='是'}).length;
