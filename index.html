@@ -1881,12 +1881,12 @@ function switchDboard(id){document.querySelectorAll('.db-tab').forEach(function(
 // ===== REGISTRATION DATA =====
 var REG_URL = 'https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/registration.json';
 function loadRegData(cb){
-  var s=localStorage.getItem('qx_reg');if(s){try{regData=JSON.parse(s)}catch(e){}}
-  if(regData.length)renderRegTop();
-  // Always fetch from cloud to sync latest
   fetch(REG_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){
     regData=d;localStorage.setItem('qx_reg',JSON.stringify(d));renderRegTop();
-  }).catch(function(){if(!regData.length)cb()});
+  }).catch(function(){
+    var s=localStorage.getItem('qx_reg');if(s){try{regData=JSON.parse(s)}catch(e){}}
+    if(regData.length)renderRegTop();
+  });
 }
 
 function saveRegData(){
