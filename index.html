@@ -2004,8 +2004,8 @@ else{byId('login-page').style.display='flex'}
 })();
 
 function promptToken(){
-  var t=prompt('输入 GitHub Token 以启用云端同步（仅管理员需设置一次）：\n\n如暂无 Token，回复"跳过"',getGistToken()||'');
-  if(t&&t!=='跳过'){localStorage.setItem('gist_token',t);alert('云端同步已启用！')}
+  var t=prompt('输入 GitHub Token 以启用云端同步（仅管理员需设置一次）：');
+  if(t&&t.length>30){localStorage.setItem('gist_token',t);alert('云端同步已启用！')}
 }
 
 // Modal click-outside
