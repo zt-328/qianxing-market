@@ -744,6 +744,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <button class="btn btn-outline btn-small" onclick="downloadSSExcel()">&#128228; 导出Excel</button>
 </div>
 <div class="card-grid" id="ss-list"></div>
+<div style="text-align:center;margin-top:16px" id="ss-more"></div>
 <div class="modal-overlay" id="ss-modal"><div class="modal"><div class="modal-header"><h2 id="ss-title"></h2><button class="modal-close" onclick="byId('ss-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="ss-body"></div></div></div>
 </section>
 <section class="page-section" id="page-dashboard">
@@ -1474,29 +1475,10 @@ function openFuDetail(company){
 }
 
 // ===== SALES STAR CUSTOMERS =====
-var ssData=[],ssSearch='';
-var SS_URL='https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/salesstar_customers.json';
-
-function loadSSCustomers(cb){
-  var s=localStorage.getItem('qx_sscust');if(s){try{ssData=JSON.parse(s).records||[]}catch(e){}}
-  cb();
-  fetch(SS_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){
-    ssData=d.records||[];localStorage.setItem('qx_sscust',JSON.stringify(d));renderSSCustomers();
-  }).catch(function(){});
-}
-
-function saveSSCustomers(){
-  localStorage.setItem('qx_sscust',JSON.stringify({records:ssData,total:ssData.length}));
-  var token=getGistToken();if(!token)return;
-  fetch('https://api.github.com/gists/'+GIST_ID,{
-    method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({files:{'salesstar_customers.json':{content:JSON.stringify({records:ssData,total:ssData.length})}}})
-  }).catch(function(){alert('云端保存失败')});
-}
-
+var ssPage=0;
 function renderSSCustomers(){
   byId('ss-import-btn').innerHTML=isAdmin()?'<button class="btn btn-primary btn-small" onclick="byId(\'ss-file\').click()">&#128229; 导入Excel</button>':'';
-  ssSearch=byId('ss-search').value.trim().toLowerCase();
+  ssSearch=byId('ss-search').value.trim().toLowerCase();ssPage=0;
   var filtered=ssSearch?ssData.filter(function(r){return(r.公司名称||'').toLowerCase().indexOf(ssSearch)!==-1||(r.姓名||'').toLowerCase().indexOf(ssSearch)!==-1}):ssData;
   byId('ss-total').textContent=filtered.length;
   var page=filtered.slice(0,50),c=byId('ss-list'),h='';
@@ -1510,6 +1492,24 @@ function renderSSCustomers(){
     h+='</div></div>';
   });
   c.innerHTML=h;
+  if(filtered.length>50)byId('ss-more').innerHTML='<button class="btn btn-outline btn-small" onclick="ssPage+=50;renderSSMore()">加载更多 ('+Math.min(50,filtered.length-50)+' 条)</button>';
+  else byId('ss-more').innerHTML='';
+}
+
+function renderSSMore(){
+  var filtered=ssSearch?ssData.filter(function(r){return(r.公司名称||'').toLowerCase().indexOf(ssSearch)!==-1||(r.姓名||'').toLowerCase().indexOf(ssSearch)!==-1}):ssData;
+  var page=filtered.slice(ssPage,ssPage+50),c=byId('ss-list');
+  page.forEach(function(r){
+    var idx=ssData.indexOf(r);
+    var card=document.createElement('div');card.className='card clickable';
+    card.onclick=function(){openSSDetail(idx)};
+    card.innerHTML='<h3>'+e(r.姓名||'')+' <span style="font-size:12px;color:var(--text-secondary);font-weight:400">'+e(r.电话||'')+'</span></h3><p>'+e(r.公司名称||'个人')+'</p><div class="meta"><span>'+e(r.线索来源||r.source||'')+'</span><span>销售：'+e(r.跟进销售||r.客户经理||'')+'</span><span>'+e(r.sheet||'')+'</span>'+(r.是否到场&&r.是否到场!=='否'?'<span style="color:#5B9E6F">&#10003; 已到场</span>':'')+(r.是否有意向&&r.是否有意向!=='否'?'<span style="color:var(--primary)">&#9733; 有意向</span>':'')+'</div>';
+    c.appendChild(card);
+  });
+  var total=ssSearch?ssData.filter(function(r){return(r.公司名称||'').toLowerCase().indexOf(ssSearch)!==-1||(r.姓名||'').toLowerCase().indexOf(ssSearch)!==-1}).length:ssData.length;
+  var remaining=total-ssPage-50;
+  if(remaining>0)byId('ss-more').innerHTML='<button class="btn btn-outline btn-small" onclick="ssPage+=50;renderSSMore()">加载更多 ('+Math.min(50,remaining)+' 条)</button>';
+  else byId('ss-more').innerHTML='';
 }
 
 function openSSDetail(idx){
