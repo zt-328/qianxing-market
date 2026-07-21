@@ -1781,7 +1781,7 @@ function handleRegUpload(input){
     if(idxName<0||idxTeam<0){alert('表头未匹配。需包含列：邀约销售名称、邀约销售所属主管组');return}
     regData=[];
     for(var i=1;i<rows.length;i++){var r=rows[i];if(r[idxName])regData.push({name:r[idxName],team:r[idxTeam]||'未分组'})}
-    var d=new Date();byId('reg-updated').textContent=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2);
+    var d=new Date();var el=byId('reg-updated');if(el)el.textContent=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2);
     saveRegData();renderRegTop();
     alert('上传成功！'+(getGistToken()?'已同步至云端。':'云端未配置，仅本地保存。'));
     }catch(ex){alert('处理出错：'+ex.message)}
