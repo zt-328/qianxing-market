@@ -1931,7 +1931,7 @@ function renderSigning(){
 }
 
 function openAddSigning(){
-  byId('mat-title').textContent='添加新签';
+  byId('sn-title').textContent='添加新签';
   var h='<div class=\"edit-row\"><label>客户经理</label><input type=\"text\" id=\"sne-sales\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
   h+='<div class=\"edit-row\"><label>签约时间</label><input type=\"text\" id=\"sne-date\" placeholder=\"如：7月20日\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
   h+='<div class=\"edit-row\"><label>公司名称</label><input type=\"text\" id=\"sne-company\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
@@ -2007,6 +2007,7 @@ byId('detail-modal').addEventListener('click',function(e){if(e.target===this)clo
 byId('add-modal').addEventListener('click',function(e){if(e.target===this)closeAddModal()});
 byId('case-modal').addEventListener('click',function(e){if(e.target===this)byId('case-modal').classList.remove('open')});
 byId('ss-modal').addEventListener('click',function(e){if(e.target===this)byId('ss-modal').classList.remove('open')});
+byId('sn-modal').addEventListener('click',function(e){if(e.target===this)byId('sn-modal').classList.remove('open')});
 </script>
 </body>
 </html>
