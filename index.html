@@ -1206,6 +1206,7 @@ function getGistToken(){
   var _tk1='ghp_49KmOlAGBhqAOfxd',_tk2='SiuLa5yn5rSyEi0HCIdR';return _tk1+_tk2;
 }
 
+var activities=[];
 function loadActs(cb){
   var s=localStorage.getItem('qx_acts');
   if(s){try{activities=JSON.parse(s)}catch(e){}}
