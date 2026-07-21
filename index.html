@@ -1219,7 +1219,7 @@ function saveActs(){
   localStorage.setItem('qx_acts',JSON.stringify(activities));
   // Sync to cloud
   var token = getGistToken();
-  if(!token){setTimeout(function(){saveCases()},1000);return}
+  if(!token){setTimeout(function(){saveActs()},1000);return}
   fetch('https://api.github.com/gists/'+GIST_ID,{
     method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
     body:JSON.stringify({files:{'activities.json':{content:JSON.stringify(activities)}}})
@@ -1389,7 +1389,7 @@ function loadCases(cb){
 function saveCases(){
   localStorage.setItem('qx_cases',JSON.stringify(cases));
   var token = getGistToken();
-  if(!token){setTimeout(function(){saveCases()},1000);return}
+  if(!token){setTimeout(function(){saveActs()},1000);return}
   fetch('https://api.github.com/gists/'+GIST_ID,{
     method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
     body:JSON.stringify({files:{'cases.json':{content:JSON.stringify(cases)}}})
