@@ -907,7 +907,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <div class="modal-overlay" id="fu-modal"><div class="modal"><div class="modal-header"><h2 id="fu-title"></h2><button class="modal-close" onclick="byId('fu-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="fu-body"></div></div></div>
 </section>
 <section class="page-section" id="page-star-reports"><div class="placeholder"><div class="icon-large">&#127881;</div><h2>销售星战报</h2><p>待内容填充</p></div></section>
-<section class="page-section" id="page-signing"><div class="placeholder"><div class="icon-large">&#128176;</div><h2>新签明细</h2><p>待内容填充</p></div></section>
+<section class="page-section" id="page-signing">
+<h1 class="page-title">新签明细</h1>
+<p class="page-desc">Q3 新签进展追踪 · 数据来源：钉钉在线表格 · <span style="font-size:12px;color:var(--text-secondary)">共 <span id="sn-total">0</span> 条记录</span></p>
+<div style="display:flex;gap:8px;margin-bottom:16px"><input type="file" id="sn-file" accept=".xlsx,.xls" onchange="handleSNUpload(this)" style="display:none"><span id="sn-import-btn"></span></div>
+<div style="background:var(--card-bg);border-radius:10px;overflow-x:auto;box-shadow:var(--shadow);border:1px solid var(--border)">
+<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:var(--bg)"><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);font-weight:600;white-space:nowrap">序号</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">客户经理</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">签约时间</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">公司名称</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">方案</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">营收(万)</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">产品</th></tr></thead><tbody id="sn-list"></tbody></table>
+</div>
+</section>
 <section class="page-section" id="page-guide">
 <h1 class="page-title">使用说明</h1>
 <p class="page-desc">陕西前星科技 · 市场活动中心 操作指南</p>
@@ -1109,6 +1116,7 @@ if(id==='star-customers'){loadSSCustomers(function(){renderSSCustomers()})}
 
 if(id==='dashboard'){loadRegData(function(){})}
 if(id==='followup'){loadCustomers(function(){byId('fu-search').value=sessionStorage.getItem('qx_fuSearch')||'';renderFollowup()})}
+if(id==='signing'){loadSigning(function(){})}
 if(id==='activity-types')renderTypePage();
 closeSidebar();
 }
@@ -1895,6 +1903,44 @@ function renderRegTop(){
   }
   html+='</div>';
   document.querySelector('#page-dashboard .db-alert').innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px"><h3 style="font-size:16px;margin-bottom:6px">&#128197; 7月22日 秦商出海沙龙</h3><div style="display:flex;gap:8px;align-items:center"><span style="font-size:12px;color:var(--text-secondary)">数据截至：<span id="reg-updated-text">'+byId('reg-updated').textContent+'</span></span><input type="file" id="reg-file" accept=".xlsx,.xls" onchange="handleRegUpload(this)" style="display:none"><button class="btn btn-primary btn-small" onclick="byId(\'reg-file\').click()">&#128229; 上传报名Excel</button></div></div>'+html;
+}
+
+// ===== SIGNING DATA =====
+var signingData=[],SN_URL='https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/signing.json';
+
+function loadSigning(cb){
+  fetch(SN_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){signingData=d||[];renderSigning()}).catch(function(){signingData=[];renderSigning()});
+  if(cb)cb();
+}
+
+function saveSigning(){
+  var t=getGistToken();if(!t)return;
+  fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+t,'Content-Type':'application/json'},body:JSON.stringify({files:{'signing.json':{content:JSON.stringify(signingData)}}})}).catch(function(){alert('云端保存失败')})
+}
+
+function renderSigning(){
+  byId('sn-import-btn').innerHTML=isAdmin()?'<button class=\"btn btn-primary btn-small\" onclick=\"byId(\'sn-file\').click()\">&#128229; 导入Excel更新</button>':'';
+  byId('sn-total').textContent=signingData.length;
+  var h='';
+  signingData.forEach(function(r,i){h+='<tr><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+(i+1)+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.sales||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.date||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.company||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.plan||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border);color:var(--primary);font-weight:500\">'+e(r.revenue||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.product||'')+'</td></tr>'});
+  if(!signingData.length)h='<tr><td colspan=\"7\" style=\"padding:20px;text-align:center;color:var(--text-secondary)\">暂无新签记录</td></tr>';
+  byId('sn-list').innerHTML=h;
+}
+
+function handleSNUpload(input){
+  var file=input.files[0];if(!file)return;
+  if(typeof XLSX==='undefined'){alert('Excel库加载中，请稍后再试');return}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var wb;try{wb=XLSX.read(e.target.result,{type:'array'})}catch(ex){alert('文件格式错误');return}
+    var sheet=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+    if(rows.length<2){alert('表格为空');return}
+    var hdr=rows[0];
+    var cols={sales:hdr.findIndex(function(h){return String(h).includes('客户经理')||String(h).includes('销售')}),date:hdr.findIndex(function(h){return String(h).includes('时间')||String(h).includes('签约')}),company:hdr.findIndex(function(h){return String(h).includes('公司')}),plan:hdr.findIndex(function(h){return String(h).includes('方案')}),revenue:hdr.findIndex(function(h){return String(h).includes('营收')||String(h).includes('金额')}),product:hdr.findIndex(function(h){return String(h).includes('产品')||String(h).includes('品类')})};
+    signingData=[];
+    for(var i=1;i<rows.length;i++){var r=rows[i];if(!r[cols.sales])continue;signingData.push({sales:String(r[cols.sales]||''),date:String(r[cols.date]||''),company:String(r[cols.company]||''),plan:String(r[cols.plan]||''),revenue:String(r[cols.revenue]||''),product:String(r[cols.product]||'')})}
+    saveSigning();renderSigning();alert('导入成功，共 '+signingData.length+' 条记录');
+  };reader.readAsArrayBuffer(file);
 }
 
 // ===== INIT =====
