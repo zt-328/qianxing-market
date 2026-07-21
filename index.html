@@ -910,9 +910,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <section class="page-section" id="page-signing">
 <h1 class="page-title">新签明细</h1>
 <p class="page-desc">Q3 新签进展追踪 · 数据来源：钉钉在线表格 · <span style="font-size:12px;color:var(--text-secondary)">共 <span id="sn-total">0</span> 条记录</span></p>
-<div style="display:flex;gap:8px;margin-bottom:16px"><input type="file" id="sn-file" accept=".xlsx,.xls" onchange="handleSNUpload(this)" style="display:none"><span id="sn-import-btn"></span></div>
+<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><button class="btn btn-primary btn-small" onclick="openAddSigning()">+ 添加新签</button><input type="file" id="sn-file" accept=".xlsx,.xls" onchange="handleSNUpload(this)" style="display:none"><span id="sn-import-btn"></span></div>
 <div style="background:var(--card-bg);border-radius:10px;overflow-x:auto;box-shadow:var(--shadow);border:1px solid var(--border)">
-<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:var(--bg)"><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);font-weight:600;white-space:nowrap">序号</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">客户经理</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">签约时间</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">公司名称</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">方案</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">营收(万)</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">产品</th></tr></thead><tbody id="sn-list"></tbody></table>
+<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:var(--bg)"><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);font-weight:600;white-space:nowrap">序号</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">客户经理</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">签约时间</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">公司名称</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">方案</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">营收(万)</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap">产品</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary);white-space:nowrap" id="sn-admin-col"></th></tr></thead><tbody id="sn-list"></tbody></table>
 </div>
 </section>
 <section class="page-section" id="page-guide">
@@ -1914,18 +1914,51 @@ function loadSigning(cb){
 }
 
 function saveSigning(){
+  localStorage.setItem('qx_signing',JSON.stringify(signingData));
   var t=getGistToken();if(!t)return;
-  fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+t,'Content-Type':'application/json'},body:JSON.stringify({files:{'signing.json':{content:JSON.stringify(signingData)}}})}).catch(function(){alert('云端保存失败')})
+  fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+t,'Content-Type':'application/json'},body:JSON.stringify({files:{'signing.json':{content:JSON.stringify(signingData)}}})}).catch(function(){alert('云端保存失败，数据已存本地')})
 }
 
 function renderSigning(){
-  byId('sn-import-btn').innerHTML=isAdmin()?'<button class=\"btn btn-primary btn-small\" onclick=\"byId(\'sn-file\').click()\">&#128229; 导入Excel更新</button>':'';
+  byId('sn-import-btn').innerHTML=isAdmin()?'<button class=\"btn btn-primary btn-small\" onclick=\"byId(\'sn-file\').click()\">&#128229; 导入Excel</button>':'';
   byId('sn-total').textContent=signingData.length;
+  byId('sn-admin-col').innerHTML=isAdmin()?'操作':'';
   var h='';
-  signingData.forEach(function(r,i){h+='<tr><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+(i+1)+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.sales||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.date||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.company||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.plan||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border);color:var(--primary);font-weight:500\">'+e(r.revenue||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.product||'')+'</td></tr>'});
-  if(!signingData.length)h='<tr><td colspan=\"7\" style=\"padding:20px;text-align:center;color:var(--text-secondary)\">暂无新签记录</td></tr>';
+  signingData.forEach(function(r,i){h+='<tr><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+(i+1)+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.sales||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.date||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.company||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.plan||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border);color:var(--primary);font-weight:500\">'+e(r.revenue||'')+'</td><td style=\"padding:8px;border-bottom:1px solid var(--border)\">'+e(r.product||'')+'</td>'+(isAdmin()?'<td style=\"padding:8px;border-bottom:1px solid var(--border)\"><button class=\"btn btn-outline btn-small\" onclick=\"editSigning('+i+')\" style=\"font-size:11px;padding:2px 8px\">编辑</button> <button class=\"btn btn-outline btn-small\" onclick=\"delSigning('+i+')\" style=\"font-size:11px;padding:2px 8px;color:#c04040\">删除</button></td>':'')+'</tr>'});
+  if(!signingData.length)h='<tr><td colspan=\"8\" style=\"padding:20px;text-align:center;color:var(--text-secondary)\">暂无新签记录</td></tr>';
   byId('sn-list').innerHTML=h;
 }
+
+function openAddSigning(){
+  byId('mat-title').textContent='添加新签';
+  var h='<div class=\"edit-row\"><label>客户经理</label><input type=\"text\" id=\"sne-sales\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<div class=\"edit-row\"><label>签约时间</label><input type=\"text\" id=\"sne-date\" placeholder=\"如：7月20日\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<div class=\"edit-row\"><label>公司名称</label><input type=\"text\" id=\"sne-company\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<div class=\"edit-row\"><label>方案</label><input type=\"text\" id=\"sne-plan\" placeholder=\"如：4.78万\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<div class=\"edit-row\"><label>营收(万)</label><input type=\"text\" id=\"sne-revenue\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<div class=\"edit-row\"><label>产品</label><input type=\"text\" id=\"sne-product\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<button class=\"btn btn-primary\" style=\"width:100%;justify-content:center\" onclick=\"doAddSigning()\">确认添加</button>';
+  byId('mat-body').innerHTML=h;byId('mat-modal').classList.add('open')}
+
+function doAddSigning(){
+  signingData.push({sales:byId('sne-sales').value.trim(),date:byId('sne-date').value.trim(),company:byId('sne-company').value.trim(),plan:byId('sne-plan').value.trim(),revenue:byId('sne-revenue').value.trim(),product:byId('sne-product').value.trim()});
+  saveSigning();byId('mat-modal').classList.remove('open');renderSigning()}
+
+function editSigning(idx){
+  var r=signingData[idx];if(!r)return;
+  byId('mat-title').textContent='编辑新签';
+  var h='<div class=\"edit-row\"><label>客户经理</label><input type=\"text\" id=\"sne-sales\" value=\"'+e(r.sales||'')+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<div class=\"edit-row\"><label>签约时间</label><input type=\"text\" id=\"sne-date\" value=\"'+e(r.date||'')+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<div class=\"edit-row\"><label>公司名称</label><input type=\"text\" id=\"sne-company\" value=\"'+e(r.company||'')+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<div class=\"edit-row\"><label>方案</label><input type=\"text\" id=\"sne-plan\" value=\"'+e(r.plan||'')+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<div class=\"edit-row\"><label>营收(万)</label><input type=\"text\" id=\"sne-revenue\" value=\"'+e(r.revenue||'')+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<div class=\"edit-row\"><label>产品</label><input type=\"text\" id=\"sne-product\" value=\"'+e(r.product||'')+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
+  h+='<button class=\"btn btn-primary\" style=\"width:100%;justify-content:center\" onclick=\"saveEditSigning('+idx+')\">保存修改</button>';
+  byId('mat-body').innerHTML=h;byId('mat-modal').classList.add('open')}
+
+function saveEditSigning(idx){var r=signingData[idx];if(!r)return;r.sales=byId('sne-sales').value.trim();r.date=byId('sne-date').value.trim();r.company=byId('sne-company').value.trim();r.plan=byId('sne-plan').value.trim();r.revenue=byId('sne-revenue').value.trim();r.product=byId('sne-product').value.trim();saveSigning();byId('mat-modal').classList.remove('open');renderSigning()}
+
+function delSigning(idx){if(!confirm('确定删除？'))return;signingData.splice(idx,1);saveSigning();renderSigning()}
 
 function handleSNUpload(input){
   var file=input.files[0];if(!file)return;
