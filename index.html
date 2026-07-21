@@ -1055,13 +1055,14 @@ function getGistToken(){
 }
 
 function loadActs(cb){
-  // Render immediately from cache
   var s=localStorage.getItem('qx_acts');
   if(s){try{activities=JSON.parse(s)}catch(e){}}
+  // Fallback to built-in default if cache is empty
+  if(!activities.length){activities=DEFAULT_ACTS.map(function(a){return Object.assign({invite:'',inviteType:'',inviteName:''},a)});saveActs();}
   cb();
   // Then refresh from cloud in background
   fetch(GIST_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
-    if(JSON.stringify(data)!==JSON.stringify(activities)){activities=data;saveActs();renderSchedule()}
+    if(data.length&&JSON.stringify(data)!==JSON.stringify(activities)){activities=data;saveActs();renderSchedule()}
   }).catch(function(){});
 }
 function saveActs(){
