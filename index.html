@@ -1767,23 +1767,24 @@ function saveRegData(){
 
 function handleRegUpload(input){
   var file=input.files[0];if(!file)return;
+  if(typeof XLSX==='undefined'){alert('Excel库加载中，请稍后再试');return}
   var reader=new FileReader();
   reader.onload=function(e){
-    var wb=XLSX.read(e.target.result,{type:'array'});
-    var sheet=wb.Sheets[wb.SheetNames[0]];
-    var rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+    var wb,sheet,rows;
+    try{wb=XLSX.read(e.target.result,{type:'array'});}catch(ex){alert('文件无法解析，请确认是xlsx格式');return}
+    try{
+    sheet=wb.Sheets[wb.SheetNames[0]];
+    rows=XLSX.utils.sheet_to_json(sheet,{header:1});
     if(rows.length<2){alert('表格为空');return}
     var hdr=rows[0];var idxName=-1,idxTeam=-1;
     for(var hi=0;hi<hdr.length;hi++){var h=String(hdr[hi]||'');if(h.indexOf('邀约销售')!==-1&&h.indexOf('称')!==-1)idxName=hi;if(h.indexOf('邀约销售')!==-1&&(h.indexOf('主管')!==-1||h.indexOf('团队')!==-1))idxTeam=hi}
     if(idxName<0||idxTeam<0){alert('表头未匹配。需包含列：邀约销售名称、邀约销售所属主管组');return}
     regData=[];
-    for(var i=1;i<rows.length;i++){
-      var r=rows[i];if(!r[idxName])continue;
-      regData.push({name:r[idxName],team:r[idxTeam]||'未分组'});
-    }
+    for(var i=1;i<rows.length;i++){var r=rows[i];if(r[idxName])regData.push({name:r[idxName],team:r[idxTeam]||'未分组'})}
     var d=new Date();byId('reg-updated').textContent=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2);
     saveRegData();renderRegTop();
     alert('上传成功！'+(getGistToken()?'已同步至云端。':'云端未配置，仅本地保存。'));
+    }catch(ex){alert('处理出错：'+ex.message)}
   };
   reader.readAsArrayBuffer(file);
 }
