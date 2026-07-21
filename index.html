@@ -1475,7 +1475,12 @@ function openFuDetail(company){
 }
 
 // ===== SALES STAR CUSTOMERS =====
-var ssPage=0;
+var ssData=[],ssSearch='',ssPage=0;
+var SS_URL='https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/salesstar_customers.json';
+
+function loadSSCustomers(cb){var s=localStorage.getItem('qx_sscust');if(s){try{ssData=JSON.parse(s).records||[]}catch(e){}};cb();fetch(SS_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(d){ssData=d.records||[];localStorage.setItem('qx_sscust',JSON.stringify(d));renderSSCustomers()}).catch(function(){})}
+function saveSSCustomers(){localStorage.setItem('qx_sscust',JSON.stringify({records:ssData,total:ssData.length}));var token=getGistToken();if(!token)return;fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},body:JSON.stringify({files:{'salesstar_customers.json':{content:JSON.stringify({records:ssData,total:ssData.length})}}})}).catch(function(){alert('云端保存失败')})}
+
 function renderSSCustomers(){
   byId('ss-import-btn').innerHTML=isAdmin()?'<button class="btn btn-primary btn-small" onclick="byId(\'ss-file\').click()">&#128229; 导入Excel</button>':'';
   ssSearch=byId('ss-search').value.trim().toLowerCase();ssPage=0;
