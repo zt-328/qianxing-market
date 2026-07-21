@@ -907,6 +907,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <div class="modal-overlay" id="fu-modal"><div class="modal"><div class="modal-header"><h2 id="fu-title"></h2><button class="modal-close" onclick="byId('fu-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="fu-body"></div></div></div>
 </section>
 <section class="page-section" id="page-star-reports"><div class="placeholder"><div class="icon-large">&#127881;</div><h2>销售星战报</h2><p>待内容填充</p></div></section>
+<div class="modal-overlay" id="sn-modal"><div class="modal"><div class="modal-header"><h2 id="sn-title"></h2><button class="modal-close" onclick="byId('sn-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="sn-body"></div></div></div>
 <section class="page-section" id="page-signing">
 <h1 class="page-title">新签明细</h1>
 <p class="page-desc">Q3 新签进展追踪 · 数据来源：钉钉在线表格 · <span style="font-size:12px;color:var(--text-secondary)">共 <span id="sn-total">0</span> 条记录</span></p>
@@ -1940,15 +1941,15 @@ function openAddSigning(){
   h+='<div class=\"edit-row\"><label>开发方式</label><input type=\"text\" id=\"sne-method\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
   h+='<div class=\"edit-row\"><label>参加活动</label><input type=\"text\" id=\"sne-activity\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
   h+='<button class=\"btn btn-primary\" style=\"width:100%;justify-content:center\" onclick=\"doAddSigning()\">确认添加</button>';
-  byId('mat-body').innerHTML=h;byId('mat-modal').classList.add('open')}
+  byId('sn-body').innerHTML=h;byId('sn-modal').classList.add('open')}
 
 function doAddSigning(){
   signingData.push({sales:byId('sne-sales').value.trim(),date:byId('sne-date').value.trim(),company:byId('sne-company').value.trim(),plan:byId('sne-plan').value.trim(),revenue:byId('sne-revenue').value.trim(),product:byId('sne-product').value.trim(),method:byId('sne-method').value.trim(),activity:byId('sne-activity').value.trim()});
-  saveSigning();byId('mat-modal').classList.remove('open');renderSigning()}
+  saveSigning();byId('sn-modal').classList.remove('open');renderSigning()}
 
 function editSigning(idx){
   var r=signingData[idx];if(!r)return;
-  byId('mat-title').textContent='编辑新签';
+  byId('sn-title').textContent='编辑新签';
   var h='<div class=\"edit-row\"><label>客户经理</label><input type=\"text\" id=\"sne-sales\" value=\"'+e(r.sales||'')+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
   h+='<div class=\"edit-row\"><label>签约时间</label><input type=\"text\" id=\"sne-date\" value=\"'+e(r.date||'')+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
   h+='<div class=\"edit-row\"><label>公司名称</label><input type=\"text\" id=\"sne-company\" value=\"'+e(r.company||'')+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
@@ -1958,9 +1959,9 @@ function editSigning(idx){
   h+='<div class=\"edit-row\"><label>开发方式</label><input type=\"text\" id=\"sne-method\" value=\"'+e(r.method||'')+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
   h+='<div class=\"edit-row\"><label>参加活动</label><input type=\"text\" id=\"sne-activity\" value=\"'+e(r.activity||'')+'\" style=\"width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px\"></div>';
   h+='<button class=\"btn btn-primary\" style=\"width:100%;justify-content:center\" onclick=\"saveEditSigning('+idx+')\">保存修改</button>';
-  byId('mat-body').innerHTML=h;byId('mat-modal').classList.add('open')}
+  byId('sn-body').innerHTML=h;byId('sn-modal').classList.add('open')}
 
-function saveEditSigning(idx){var r=signingData[idx];if(!r)return;r.sales=byId('sne-sales').value.trim();r.date=byId('sne-date').value.trim();r.company=byId('sne-company').value.trim();r.plan=byId('sne-plan').value.trim();r.revenue=byId('sne-revenue').value.trim();r.product=byId('sne-product').value.trim();r.method=byId('sne-method').value.trim();r.activity=byId('sne-activity').value.trim();saveSigning();byId('mat-modal').classList.remove('open');renderSigning()}
+function saveEditSigning(idx){var r=signingData[idx];if(!r)return;r.sales=byId('sne-sales').value.trim();r.date=byId('sne-date').value.trim();r.company=byId('sne-company').value.trim();r.plan=byId('sne-plan').value.trim();r.revenue=byId('sne-revenue').value.trim();r.product=byId('sne-product').value.trim();r.method=byId('sne-method').value.trim();r.activity=byId('sne-activity').value.trim();saveSigning();byId('sn-modal').classList.remove('open');renderSigning()}
 
 function delSigning(idx){if(!confirm('确定删除？'))return;signingData.splice(idx,1);saveSigning();renderSigning()}
 
