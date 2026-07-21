@@ -1219,7 +1219,7 @@ function saveActs(){
   localStorage.setItem('qx_acts',JSON.stringify(activities));
   // Sync to cloud
   var token = getGistToken();
-  if(!token) return;
+  if(!token){setTimeout(function(){saveCases()},1000);return}
   fetch('https://api.github.com/gists/'+GIST_ID,{
     method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
     body:JSON.stringify({files:{'activities.json':{content:JSON.stringify(activities)}}})
@@ -1389,7 +1389,7 @@ function loadCases(cb){
 function saveCases(){
   localStorage.setItem('qx_cases',JSON.stringify(cases));
   var token = getGistToken();
-  if(!token) return;
+  if(!token){setTimeout(function(){saveCases()},1000);return}
   fetch('https://api.github.com/gists/'+GIST_ID,{
     method:'PATCH',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
     body:JSON.stringify({files:{'cases.json':{content:JSON.stringify(cases)}}})
@@ -1442,7 +1442,7 @@ h+='<div class="info-row" style="margin-top:16px"><span class="info-label">年�
 h+='<div style="margin-top:12px;font-size:14px;line-height:2;color:var(--text)">'+e(x.story)+'</div>';
 if(x.url)h+='<div style="margin-top:12px"><a href="'+e(x.url)+'" target="_blank" class="btn btn-outline btn-small">查看店铺</a></div>';
 h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
-h+='<div class="edit-row"><label>行业</label><input type="text" id="ce-ind" value="'+e(x.ind||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+h+='<div class="edit-row"><label>公司名称</label><input type="text" id="ce-name" value="'+e(x.name||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div><div class="edit-row"><label>行业</label><input type="text" id="ce-ind" value="'+e(x.ind||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
 h+='<div class="edit-row"><label>类型</label><input type="text" id="ce-type" value="'+e(x.type||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
 h+='<div class="edit-row"><label>年销</label><input type="text" id="ce-rev" value="'+e(x.rev||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
 h+='<div class="edit-row"><label>店铺链接</label><input type="text" id="ce-url" value="'+e(x.url||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
