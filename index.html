@@ -1528,7 +1528,32 @@ function openSSDetail(idx){
   h+='<div class="info-row"><span class="info-label">是否有意向</span><span class="info-value">'+e(r.是否有意向||'')+'</span></div>';
   if(r.跟进情况||r.跟进情况)h+='<div class="info-row"><span class="info-label">跟进情况</span><span class="info-value">'+e(r.跟进情况||'')+'</span></div>';
   if(r.备注)h+='<div class="info-row"><span class="info-label">备注</span><span class="info-value">'+e(r.备注)+'</span></div>';
+  if(isAdmin()){
+    h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
+    h+='<div class="edit-row"><label>姓名</label><input type="text" id="sse-name" value="'+e(r.姓名||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>电话</label><input type="text" id="sse-phone" value="'+e(r.电话||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>公司名称</label><input type="text" id="sse-company" value="'+e(r.公司名称||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>回访结果</label><input type="text" id="sse-result" value="'+e(r.回访结果||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>是否到场</label><input type="text" id="sse-attend" value="'+e(r.是否到场||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>是否有意向</label><input type="text" id="sse-intent" value="'+e(r.是否有意向||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div class="edit-row"><label>备注</label><input type="text" id="sse-notes" value="'+e(r.备注||'')+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+    h+='<div style="display:flex;gap:8px"><button class="btn btn-primary btn-small" onclick="saveSSEdit('+idx+')">保存</button><button class="btn btn-outline btn-small" onclick="byId(\'ss-modal\').classList.remove(\'open\')">取消</button><button class="btn btn-outline btn-small" style="margin-left:auto;color:#c04040;border-color:#c04040" onclick="delSSRecord('+idx+')">删除</button></div></div>';
+  }
   byId('ss-body').innerHTML=h;byId('ss-modal').classList.add('open');
+}
+
+function saveSSEdit(idx){
+  var r=ssData[idx];if(!r)return;
+  r.姓名=byId('sse-name').value.trim();r.电话=byId('sse-phone').value.trim();
+  r.公司名称=byId('sse-company').value.trim();r.回访结果=byId('sse-result').value.trim();
+  r.是否到场=byId('sse-attend').value.trim();r.是否有意向=byId('sse-intent').value.trim();
+  r.备注=byId('sse-notes').value.trim();
+  saveSSCustomers();byId('ss-modal').classList.remove('open');renderSSCustomers();
+}
+
+function delSSRecord(idx){
+  if(!confirm('确定删除此客户记录？'))return;
+  ssData.splice(idx,1);saveSSCustomers();byId('ss-modal').classList.remove('open');renderSSCustomers();
 }
 
 function handleSSUpload(input){
