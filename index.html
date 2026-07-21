@@ -1192,8 +1192,16 @@ var DEFAULT_ACTS = [
 var GIST_ID = '42df42de5e3fdd6deca7d592d452290a';
 var GIST_URL = 'https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/activities.json';
 
+var _gistToken='';
 function getGistToken(){
-  return localStorage.getItem('gist_token') || '';
+  if(_gistToken)return _gistToken;
+  var t=localStorage.getItem('gist_token');
+  if(t){_gistToken=t;return t}
+  // Try cloud config
+  fetch('https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/config.json?t='+Date.now()).then(function(r){return r.json()}).then(function(d){
+    if(d.token){_gistToken=d.token;localStorage.setItem('gist_token',d.token)}
+  }).catch(function(){});
+  return t||'';
 }
 
 function loadActs(cb){
