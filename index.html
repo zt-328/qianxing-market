@@ -942,6 +942,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 </div>
 </div>
 </section>
+<section class="page-section" id="page-users">
+<h1 class="page-title">账号管理</h1>
+<p class="page-desc">管理员可添加、编辑、删除用户账号 · 共 <span id="um-total">0</span> 人</p>
+<button class="btn btn-primary btn-small" style="margin-bottom:16px" onclick="openAddUser()">+ 添加账号</button>
+<div style="background:var(--card-bg);border-radius:10px;overflow-x:auto;box-shadow:var(--shadow);border:1px solid var(--border)">
+<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:var(--bg)"><th style="padding:10px 8px;text-align:left;color:var(--text-secondary)">姓名</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary)">密码</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary)">角色</th><th style="padding:10px 8px;text-align:left;color:var(--text-secondary)">操作</th></tr></thead><tbody id="um-list"></tbody></table>
+</div>
+<div class="modal-overlay" id="um-modal"><div class="modal"><div class="modal-header"><h2 id="um-title"></h2><button class="modal-close" onclick="byId('um-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="um-body"></div></div></div>
+</section>
 <section class="page-section" id="page-guide">
 <h1 class="page-title">使用说明</h1>
 <p class="page-desc">陕西前星科技 · 市场活动中心 操作指南</p>
@@ -1090,7 +1099,7 @@ var NAV_ITEMS = [
 {group:'销售星 · 抖音获客',items:[{id:'star-intro',icon:'&#127775;',label:'销售星介绍 & 加入流程'},{id:'star-learn',icon:'&#128218;',label:'销售星学习资料'},{id:'star-sop',icon:'&#128203;',label:'销售星工作SOP'},{id:'star-customers',icon:'&#128101;',label:'销售星客户名单'},{id:'star-reports',icon:'&#127881;',label:'销售星战报'}]},
 {group:'数据与激励',items:[{id:'dashboard',icon:'&#128200;',label:'活动数据看板'},{id:'followup',icon:'&#128101;',label:'客户跟进'}]},
 {group:'业绩追踪',items:[{id:'signing',icon:'&#128176;',label:'新签明细'}]},
-{group:'其他',items:[{id:'guide',icon:'&#128214;',label:'使用说明'}]}
+{group:'其他',items:[{id:'guide',icon:'&#128214;',label:'使用说明'},{id:'users',icon:'&#128273;',label:'账号管理',admin:true}]}
 ];
 
 // ===== AUTH =====
@@ -1122,6 +1131,7 @@ var h='';
 NAV_ITEMS.forEach(function(g){
 h+='<div class="nav-group"><div class="nav-group-label">'+g.group+'</div>';
 g.items.forEach(function(it){
+if(it.admin&&!isAdmin())return;
 h+='<a class="nav-item'+(it.id==='schedule'?' active':'')+'" onclick="switchPage(\''+it.id+'\',this)"><span class="icon">'+it.icon+'</span> '+it.label+'</a>';
 });
 h+='</div>';
@@ -1145,6 +1155,7 @@ if(id==='star-customers'){loadSSCustomers(function(){renderSSCustomers()})}
 if(id==='dashboard'){loadRegData(function(){})}
 if(id==='followup'){loadCustomers(function(){byId('fu-search').value=sessionStorage.getItem('qx_fuSearch')||'';renderFollowup()})}
 if(id==='signing'){loadSigning(function(){})}
+if(id==='users'){renderUsers()}
 if(id==='activity-types')renderTypePage();
 closeSidebar();
 }
@@ -1933,6 +1944,53 @@ function renderRegTop(){
   document.querySelector('#page-dashboard .db-alert').innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px"><h3 style="font-size:16px;margin-bottom:6px">&#128197; 7月22日 秦商出海沙龙</h3><div style="display:flex;gap:8px;align-items:center"><span style="font-size:12px;color:var(--text-secondary)">数据截至：<span id="reg-updated-text">'+byId('reg-updated').textContent+'</span></span><input type="file" id="reg-file" accept=".xlsx,.xls" onchange="handleRegUpload(this)" style="display:none"><button class="btn btn-primary btn-small" onclick="byId(\'reg-file\').click()">&#128229; 上传报名Excel</button></div></div>'+html;
 }
 
+// ===== USER MANAGEMENT =====
+function renderUsers(){
+  byId('um-total').textContent=USERS.length;
+  var h='';
+  USERS.forEach(function(u,i){h+='<tr><td style="padding:8px;border-bottom:1px solid var(--border)">'+e(u.name)+'</td><td style="padding:8px;border-bottom:1px solid var(--border)">'+e(u.pwd)+'</td><td style="padding:8px;border-bottom:1px solid var(--border)">'+e(u.role)+'</td><td style="padding:8px;border-bottom:1px solid var(--border)"><button class="btn btn-outline btn-small" onclick="editUser('+i+')" style="font-size:11px;padding:2px 8px">编辑</button> <button class="btn btn-outline btn-small" onclick="delUser('+i+')" style="font-size:11px;padding:2px 8px;color:#c04040">删除</button></td></tr>'});
+  byId('um-list').innerHTML=h;
+}
+
+function openAddUser(){
+  byId('um-title').textContent='添加账号';
+  var h='<div class="edit-row"><label>姓名</label><input type="text" id="ume-name" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+  h+='<div class="edit-row"><label>密码</label><input type="text" id="ume-pwd" value="123456" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+  h+='<div class="edit-row"><label>角色</label><select class="cat-select" id="ume-role"><option>客户经理</option><option>销售主管</option><option>运营主管</option><option>管理员</option></select></div>';
+  h+='<button class="btn btn-primary" style="width:100%" onclick="doAddUser()">添加</button>';
+  byId('um-body').innerHTML=h;byId('um-modal').classList.add('open');
+}
+
+function doAddUser(){
+  var name=byId('ume-name').value.trim();if(!name){alert('请输入姓名');return}
+  USERS.push({name:name,pwd:byId('ume-pwd').value.trim()||'123456',role:byId('ume-role').value});
+  saveUsers();renderUsers();byId('um-modal').classList.remove('open');
+}
+
+function editUser(idx){
+  var u=USERS[idx];if(!u)return;
+  byId('um-title').textContent='编辑账号';
+  var h='<div class="edit-row"><label>姓名</label><input type="text" id="ume-name" value="'+e(u.name)+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+  h+='<div class="edit-row"><label>密码</label><input type="text" id="ume-pwd" value="'+e(u.pwd)+'" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px"></div>';
+  h+='<div class="edit-row"><label>角色</label><select class="cat-select" id="ume-role"><option'+(u.role==='客户经理'?' selected':'')+'>客户经理</option><option'+(u.role==='销售主管'?' selected':'')+'>销售主管</option><option'+(u.role==='运营主管'?' selected':'')+'>运营主管</option><option'+(u.role==='管理员'?' selected':'')+'>管理员</option></select></div>';
+  h+='<button class="btn btn-primary" style="width:100%" onclick="saveEditUser('+idx+')">保存</button>';
+  byId('um-body').innerHTML=h;byId('um-modal').classList.add('open');
+}
+
+function saveEditUser(idx){
+  var u=USERS[idx];if(!u)return;
+  u.name=byId('ume-name').value.trim();u.pwd=byId('ume-pwd').value.trim()||'123456';
+  u.role=byId('ume-role').value;saveUsers();renderUsers();byId('um-modal').classList.remove('open');
+}
+
+function delUser(idx){if(!confirm('确定删除？'))return;USERS.splice(idx,1);saveUsers();renderUsers()}
+
+function saveUsers(){
+  localStorage.setItem('qx_users',JSON.stringify(USERS));
+  var t=getGistToken();if(!t)return;
+  fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+t,'Content-Type':'application/json'},body:JSON.stringify({files:{'users.json':{content:JSON.stringify(USERS)}}})}).catch(function(){});
+}
+
 // ===== SIGNING DATA =====
 var signingData=[],SN_URL='https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/signing.json';
 
@@ -2068,6 +2126,7 @@ byId('add-modal').addEventListener('click',function(e){if(e.target===this)closeA
 byId('case-modal').addEventListener('click',function(e){if(e.target===this)byId('case-modal').classList.remove('open')});
 byId('ss-modal').addEventListener('click',function(e){if(e.target===this)byId('ss-modal').classList.remove('open')});
 byId('sn-modal').addEventListener('click',function(e){if(e.target===this)byId('sn-modal').classList.remove('open')});
+byId('um-modal').addEventListener('click',function(e){if(e.target===this)byId('um-modal').classList.remove('open')});
 </script>
 </body>
 </html>
