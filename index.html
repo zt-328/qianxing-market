@@ -1901,7 +1901,15 @@ function renderRegTop(){
 (function init(){
 var u=getU();
 if(u){byId('login-page').style.display='none';byId('app-container').classList.add('active');buildNav();renderLoginUI();
-  loadActs(function(){renderSchedule();if(isAdmin()&&!getGistToken())promptToken()});}
+  loadActs(function(){
+    renderSchedule();
+    var lastPage=sessionStorage.getItem('qx_lastPage');
+    if(lastPage&&lastPage!=='schedule'){
+      var nav=document.querySelector('.nav-item[data-page=\"'+lastPage+'\"]');
+      if(nav)setTimeout(function(){switchPage(lastPage,nav)},300);
+    }
+    if(isAdmin()&&!getGistToken())setTimeout(function(){promptToken()},800);
+  });}
 else{byId('login-page').style.display='flex'}
 })();
 
