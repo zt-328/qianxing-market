@@ -915,8 +915,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+// ===== LAZY LOAD XLSX =====
+var xlsxReady=false;
+function ensureXLSX(cb){
+  if(window.XLSX){xlsxReady=true;cb();return}
+  if(document.getElementById('xlsx-script')){setTimeout(function(){ensureXLSX(cb)},200);return}
+  var s=document.createElement('script');
+  s.id='xlsx-script';s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  s.onload=function(){xlsxReady=true;cb();};
+  document.head.appendChild(s);
+}
+
 // ===== DATA =====
 var USERS = [
 {name:'王帅飞',pwd:'123456',role:'客户经理'},{name:'寇智星',pwd:'123456',role:'客户经理'},{name:'王庚毅',pwd:'123456',role:'客户经理'},{name:'田耀利',pwd:'123456',role:'客户经理'},{name:'吴贵琴',pwd:'123456',role:'客户经理'},{name:'李凌龙',pwd:'123456',role:'客户经理'},{name:'张伟',pwd:'123456',role:'客户经理'},{name:'王雪',pwd:'123456',role:'客户经理'},{name:'路路明',pwd:'123456',role:'客户经理'},{name:'王浩楠',pwd:'123456',role:'客户经理'},{name:'何俣岐',pwd:'123456',role:'客户经理'},{name:'来星驰',pwd:'123456',role:'客户经理'},{name:'李江樑',pwd:'123456',role:'客户经理'},{name:'段豪歌',pwd:'123456',role:'客户经理'},{name:'洪宇超',pwd:'123456',role:'客户经理'},{name:'缑李琳',pwd:'123456',role:'客户经理'},{name:'王维治',pwd:'123456',role:'客户经理'},{name:'安阳',pwd:'123456',role:'客户经理'},{name:'李悦',pwd:'123456',role:'客户经理'},{name:'程梦',pwd:'123456',role:'客户经理'},{name:'孟凡喆',pwd:'123456',role:'客户经理'},{name:'颉冠斌',pwd:'123456',role:'客户经理'},{name:'田晨泽',pwd:'123456',role:'客户经理'},{name:'王伟霞',pwd:'123456',role:'客户经理'},{name:'曹子亮',pwd:'123456',role:'客户经理'},{name:'杨鑫',pwd:'123456',role:'客户经理'},{name:'罗海荣',pwd:'123456',role:'客户经理'},{name:'张静',pwd:'123456',role:'管理员'},{name:'翟恬',pwd:'123456',role:'管理员'},{name:'杨蒙',pwd:'123456',role:'销售主管'},{name:'马旭伟',pwd:'123456',role:'销售主管'},{name:'董越',pwd:'123456',role:'销售主管'},{name:'雷明升',pwd:'123456',role:'销售主管'},{name:'姬媛',pwd:'123456',role:'运营主管'}
@@ -1345,6 +1355,8 @@ function saveCustomers(){
 
 function handleFuUpload(input){
   var file=input.files[0];if(!file)return;
+  ensureXLSX(function(){doFuUpload(file)});}
+function doFuUpload(file){
   var reader=new FileReader();
   reader.onload=function(e){
     var wb=XLSX.read(e.target.result,{type:'array'});
@@ -1416,6 +1428,8 @@ function renderFuMore(){
 }
 
 function downloadFuExcel(){
+  ensureXLSX(function(){doDownloadFu()});}
+function doDownloadFu(){
   var filtered=fuSearch?customers.filter(function(c){return c.company.toLowerCase().indexOf(fuSearch)!==-1}):customers;
   var rows=[['公司名称','联系人','销售','参加次数','季度','最近活动']];
   filtered.forEach(function(c){
@@ -1613,6 +1627,8 @@ function saveRegData(){
 
 function handleRegUpload(input){
   var file=input.files[0];if(!file)return;
+  ensureXLSX(function(){doRegUpload(file)});}
+function doRegUpload(file){
   var reader=new FileReader();
   reader.onload=function(e){
     var wb=XLSX.read(e.target.result,{type:'array'});
