@@ -1074,12 +1074,6 @@ function loadActs(cb){
   if(s){try{activities=JSON.parse(s)}catch(e){}}
   if(!activities.length){activities=DEFAULT_ACTS.map(function(a){return Object.assign({invite:'',inviteType:'',inviteName:''},a)});saveActs();}
   cb();
-  // Background refresh
-  setTimeout(function(){
-    fetch(GIST_URL+'?t='+Date.now()).then(function(r){return r.json()}).then(function(data){
-      if(data.length&&data.length!==activities.length){activities=data;saveActs();renderSchedule()}
-    }).catch(function(){});
-  },2000);
 }
 function saveActs(){
   localStorage.setItem('qx_acts',JSON.stringify(activities));
