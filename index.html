@@ -744,6 +744,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 <button class="btn btn-outline btn-small" onclick="downloadSSExcel()">&#128228; 导出Excel</button>
 </div>
 <div class="card-grid" id="ss-list"></div>
+<div class="modal-overlay" id="ss-modal"><div class="modal"><div class="modal-header"><h2 id="ss-title"></h2><button class="modal-close" onclick="byId('ss-modal').classList.remove('open')">&times;</button></div><div class="modal-body" id="ss-body"></div></div></div>
 </section>
 <section class="page-section" id="page-dashboard">
 <h1 class="page-title">活动数据看板</h1>
@@ -1499,8 +1500,9 @@ function renderSSCustomers(){
   var filtered=ssSearch?ssData.filter(function(r){return(r.公司名称||'').toLowerCase().indexOf(ssSearch)!==-1||(r.姓名||'').toLowerCase().indexOf(ssSearch)!==-1}):ssData;
   byId('ss-total').textContent=filtered.length;
   var page=filtered.slice(0,50),c=byId('ss-list'),h='';
-  page.forEach(function(r){
-    h+='<div class="card"><h3>'+e(r.姓名||'')+' <span style="font-size:12px;color:var(--text-secondary);font-weight:400">'+e(r.电话||'')+'</span></h3>';
+  page.forEach(function(r,i){
+    var idx=ssData.indexOf(r);
+    h+='<div class="card clickable" onclick="openSSDetail('+idx+')"><h3>'+e(r.姓名||'')+' <span style="font-size:12px;color:var(--text-secondary);font-weight:400">'+e(r.电话||'')+'</span></h3>';
     h+='<p>'+e(r.公司名称||'个人')+'</p>';
     h+='<div class="meta"><span>'+e(r.线索来源||r.source||'')+'</span><span>销售：'+e(r.跟进销售||r.客户经理||'')+'</span><span>'+e(r.sheet||'')+'</span>';
     if(r.是否到场&&r.是否到场!=='否')h+='<span style="color:#5B9E6F">&#10003; 已到场</span>';
@@ -1508,6 +1510,25 @@ function renderSSCustomers(){
     h+='</div></div>';
   });
   c.innerHTML=h;
+}
+
+function openSSDetail(idx){
+  var r=ssData[idx];if(!r)return;
+  byId('ss-title').textContent=r.姓名||'客户';
+  var h='<div class="info-row"><span class="info-label">姓名</span><span class="info-value">'+e(r.姓名||'')+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">电话</span><span class="info-value">'+e(r.电话||'')+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">公司</span><span class="info-value">'+e(r.公司名称||'个人')+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">来源</span><span class="info-value">'+e(r.线索来源||r.source||'')+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">销售</span><span class="info-value">'+e(r.跟进销售||r.客户经理||'')+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">活动</span><span class="info-value">'+e(r.sheet||'')+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">回访结果</span><span class="info-value">'+e(r.回访结果||'')+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">参会人数</span><span class="info-value">'+e(r.参会人数||'')+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">是否报名</span><span class="info-value">'+e(r.是否报名||'')+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">是否到场</span><span class="info-value">'+e(r.是否到场||'')+'</span></div>';
+  h+='<div class="info-row"><span class="info-label">是否有意向</span><span class="info-value">'+e(r.是否有意向||'')+'</span></div>';
+  if(r.跟进情况||r.跟进情况)h+='<div class="info-row"><span class="info-label">跟进情况</span><span class="info-value">'+e(r.跟进情况||'')+'</span></div>';
+  if(r.备注)h+='<div class="info-row"><span class="info-label">备注</span><span class="info-value">'+e(r.备注)+'</span></div>';
+  byId('ss-body').innerHTML=h;byId('ss-modal').classList.add('open');
 }
 
 function handleSSUpload(input){
@@ -1793,6 +1814,7 @@ function promptToken(){
 byId('detail-modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
 byId('add-modal').addEventListener('click',function(e){if(e.target===this)closeAddModal()});
 byId('case-modal').addEventListener('click',function(e){if(e.target===this)byId('case-modal').classList.remove('open')});
+byId('ss-modal').addEventListener('click',function(e){if(e.target===this)byId('ss-modal').classList.remove('open')});
 </script>
 </body>
 </html>
