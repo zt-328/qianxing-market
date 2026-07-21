@@ -1048,8 +1048,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 // ===== LAZY LOAD XLSX =====
 var xlsxReady=false;
@@ -2138,6 +2136,16 @@ byId('case-modal').addEventListener('click',function(e){if(e.target===this)byId(
 byId('ss-modal').addEventListener('click',function(e){if(e.target===this)byId('ss-modal').classList.remove('open')});
 byId('sn-modal').addEventListener('click',function(e){if(e.target===this)byId('sn-modal').classList.remove('open')});
 byId('um-modal').addEventListener('click',function(e){if(e.target===this)byId('um-modal').classList.remove('open')});
+
+(function loadLibs(){
+  var xlsx=document.createElement('script');
+  xlsx.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  document.head.appendChild(xlsx);
+  var chart=document.createElement('script');
+  chart.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+  chart.onload=function(){if(typeof signHistory!=='undefined'&&signingData.length>3)renderSigningCharts()};
+  document.head.appendChild(chart);
+})();
 </script>
 </body>
 </html>
