@@ -1155,7 +1155,7 @@ if(!u){err.textContent='姓名不存在';err.style.display='block';return}
 if(u.pwd!==p){err.textContent='密码错误';err.style.display='block';return}
 setU(u);byId('login-page').style.display='none';byId('app-container').classList.add('active');
 err.style.display='none';byId('login-name').value='';byId('login-pwd').value='';
-buildNav();renderLoginUI();renderSchedule();
+buildNav();renderLoginUI();loadActs(function(){renderSchedule()});
 }
 function doLogout(){setU(null);byId('login-page').style.display='flex';byId('app-container').classList.remove('active')}
 
