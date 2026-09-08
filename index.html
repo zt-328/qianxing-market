@@ -2037,6 +2037,25 @@ function saveUsers(){
   var t=getGistToken();if(!t)return;
   fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+t,'Content-Type':'application/json'},body:JSON.stringify({files:{'users.json':{content:JSON.stringify(USERS)}}})}).catch(function(){});
 }
+function mergeUsers(base,extra){
+  var map={},out=[];
+  base.forEach(function(u){map[u.name]=out.length;out.push({name:u.name,pwd:u.pwd,role:u.role})});
+  extra.forEach(function(u){
+    if(!u||!u.name)return;
+    if(map[u.name]!==undefined){out[map[u.name]].pwd=u.pwd;out[map[u.name]].role=u.role}
+    else{map[u.name]=out.length;out.push({name:u.name,pwd:u.pwd,role:u.role})}
+  });
+  return out;
+}
+function loadUsers(){
+  var base=USERS.slice();
+  var s=localStorage.getItem('qx_users');
+  if(s){try{var arr=JSON.parse(s);if(arr&&arr.length)base=mergeUsers(base,arr)}catch(e){}}
+  USERS=base;
+  fetch('https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/users.json?t='+Date.now()).then(function(r){return r.json()}).then(function(d){
+    if(d&&d.length){USERS=d;localStorage.setItem('qx_users',JSON.stringify(d));if(byId('um-list'))renderUsers()}
+  }).catch(function(){});
+}
 
 // ===== SIGNING DATA =====
 var signingData=[],SN_URL='https://gist.githubusercontent.com/zt-328/'+GIST_ID+'/raw/signing.json';
@@ -2148,6 +2167,7 @@ function handleSNUpload(input){
 
 // ===== INIT =====
 (function init(){
+loadUsers();
 var u=getU();
 if(u){byId('login-page').style.display='none';byId('app-container').classList.add('active');buildNav();renderLoginUI();
   loadActs(function(){
