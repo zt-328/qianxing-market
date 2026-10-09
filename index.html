@@ -1128,7 +1128,7 @@ function parseDateForStatus(d){
   return null;
 }
 
-var calendarMonth = 7;
+var calendarMonth = 10;
 var scheduleView = 'calendar'; // 'calendar' or 'inviting'
 
 // NAV items
@@ -1305,12 +1305,12 @@ CAT_KEYS.forEach(function(cat){var x=CATS[cat];h+='<span style="display:flex;ali
 h+='</div>';
 
 h+='<div class="cal-header">';
-[7,8,9].forEach(function(m){h+='<button class="cal-month-btn'+(calendarMonth===m?' active':'')+'" onclick="calendarMonth='+m+';renderSchedule()">'+m+'月</button>'});
+[10,11,12].forEach(function(m){h+='<button class="cal-month-btn'+(calendarMonth===m?' active':'')+'" onclick="calendarMonth='+m+';renderSchedule()">'+m+'月</button>'});
 if(isAdmin())h+='<button class="btn btn-primary btn-small" style="margin-left:auto" onclick="openAdd()">+ 添加活动</button>';
 h+='</div>';
 
-var dim=calendarMonth===7?31:(calendarMonth===8?31:30);
-var fdow=calendarMonth===7?3:(calendarMonth===8?6:2);
+var dim=new Date(2026,calendarMonth,0).getDate();
+var fdow=new Date(2026,calendarMonth-1,1).getDay();
 var dows=['日','一','二','三','四','五','六'];
 h+='<div class="cal-grid">';
 dows.forEach(function(d,i){h+='<div class="cal-dow'+(i===0||i===6?' weekend':'')+'">'+d+'</div>'});
